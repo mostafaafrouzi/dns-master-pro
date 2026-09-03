@@ -1,0 +1,83 @@
+<resources>
+    <string name="app_name">دی‌ان‌اس مستر</string>
+    <string name="app_tagline">تغییر دهنده و تست سرعت فوق‌سریع DNS</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">خانه</string>
+    <string name="nav_servers">لیست DNS</string>
+    <string name="nav_speedtest">تست سرعت</string>
+    <string name="nav_settings">تنظیمات</string>
+    <string name="nav_custom">افزودن دی‌ان‌اس</string>
+
+    <!-- Dashboard -->
+    <string name="status_connected">متصل و فعال</string>
+    <string name="status_disconnected">قطع می‌باشد</string>
+    <string name="status_connecting">در حال اتصال...</string>
+    <string name="status_disconnecting">در حال قطع...</string>
+    <string name="btn_connect">اتصال</string>
+    <string name="btn_disconnect">قطع اتصال</string>
+    <string name="active_dns">دی‌ان‌اس فعال</string>
+    <string name="primary_ip">آی‌پی اصلی</string>
+    <string name="secondary_ip">آی‌پی ثانویه</string>
+    <string name="uptime">مدت اتصال</string>
+    <string name="latency">پینگ زنده</string>
+    <string name="quick_select">سوییچ سریع</string>
+    <string name="tap_to_change">برای تغییر سرور ضربه بزنید</string>
+
+    <!-- DNS List -->
+    <string name="search_hint">جستجوی دی‌ان‌اس...</string>
+    <string name="category_all">همه</string>
+    <string name="category_fast">سریع و عمومی</string>
+    <string name="category_anti_sanction">تحریم‌شکن و برنامه‌نویسان</string>
+    <string name="category_gaming">گیمینگ (پینگ پایین)</string>
+    <string name="category_privacy">حریم خصوصی و ضدردیابی</string>
+    <string name="category_family">امنیت خانواده</string>
+    <string name="category_custom">سفارشی من</string>
+    <string name="no_servers_found">سروری یافت نشد</string>
+    <string name="delete_custom_dns">حذف دی‌ان‌اس سفارشی</string>
+    <string name="confirm_delete">آیا از حذف این سرور اطمینان دارید؟</string>
+    <string name="cancel">انصراف</string>
+    <string name="delete">حذف</string>
+
+    <!-- Speed Test -->
+    <string name="speedtest_title">بنچمارک و تست پینگ DNS</string>
+    <string name="speedtest_subtitle">تست همزمان تمام سرورها برای یافتن کمترین پینگ</string>
+    <string name="btn_start_test">شروع تست سرعت</string>
+    <string name="testing_in_progress">در حال پینگ سرورها...</string>
+    <string name="fastest_server">سریع‌ترین سرور</string>
+    <string name="apply_fastest">اعمال و اتصال</string>
+    <string name="ms">میلی‌ثانیه</string>
+    <string name="timeout">تایم‌اوت</string>
+
+    <!-- Custom DNS -->
+    <string name="custom_dns_title">تعریف DNS سفارشی</string>
+    <string name="custom_dns_subtitle">پیکربندی دستی سرورهای دلخواه IPv4 و IPv6</string>
+    <string name="field_name">عنوان یا نام سرور</string>
+    <string name="field_primary_ip">آدرس آی‌پی اصلی (الزامی)</string>
+    <string name="field_secondary_ip">آدرس آی‌پی کمکی (اختیاری)</string>
+    <string name="btn_save_dns">ذخیره و انتخاب سرور</string>
+    <string name="error_invalid_name">لطفاً یک عنوان معتبر وارد کنید</string>
+    <string name="error_invalid_primary_ip">فرمت آی‌پی اصلی نامعتبر است</string>
+    <string name="error_invalid_secondary_ip">فرمت آی‌پی کمکی نامعتبر است</string>
+
+    <!-- Settings -->
+    <string name="settings_title">تنظیمات</string>
+    <string name="section_preferences">تنظیمات کاربری</string>
+    <string name="pref_language">زبان برنامه (Language)</string>
+    <string name="pref_theme">تم ظاهری</string>
+    <string name="theme_dark">تیره نئونی (Dark)</string>
+    <string name="theme_light">روشن (Light)</string>
+    <string name="theme_system">هماهنگ با سیستم</string>
+    <string name="pref_auto_connect">اتصال خودکار پس از روشن شدن گوشی</string>
+    <string name="pref_auto_connect_desc">شروع به کار سرویس DNS بلافاصله پس از بوت سیستم‌عامل</string>
+    <!-- Diagnostics & Info -->
+    <string name="network_diagnostics">تشخیص وضعیت شبکه</string>
+    <string name="connection_type">نوع اتصال</string>
+    <string name="local_ip">آی‌پی محلی دستگاه</string>
+    <string name="security_guarantee_title">تضمین ۱۰۰٪ امنیت و تونل محلی</string>
+    <string name="security_guarantee_desc">این اپلیکیشن ترافیک شخصی، دانلودها و اطلاعات شما را از سرور واسط عبور نمی‌دهد. تنها درخواست‌های سبک DNS به صورت کاملاً ایمن در داخل دستگاه هدایت می‌شوند.</string>
+    <string name="session_summary_title">پایان نشست اتصال</string>
+    <string name="session_summary_server">سرور استفاده‌شده</string>
+    <string name="session_summary_duration">مدت زمان اتصال</string>
+    <string name="dismiss">متوجه شدم</string>
+</resources>
