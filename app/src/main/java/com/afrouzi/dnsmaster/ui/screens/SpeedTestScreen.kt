@@ -81,6 +81,7 @@ fun SpeedTestScreen(
     var pingResults by remember {
         mutableStateOf(allServers.map { SpeedTestResult(it, null, SpeedTestStatus.IDLE) })
     }
+    var selectedCategoryFilter by remember { mutableStateOf<String?>(null) }
 
     // NSLookup State
     var targetDomain by remember { mutableStateOf("google.com") }
@@ -192,235 +193,240 @@ fun SpeedTestScreen(
         lookupResults.find { it.isFastest && it.status == SpeedTestStatus.SUCCESS }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    val filteredResults = remember(pingResults, selectedCategoryFilter) {
+        if (selectedCategoryFilter == null) {
+            pingResults
+        } else {
+            pingResults.filter { it.dnsItem.category == selectedCategoryFilter }
+        }
+    }
+
+    Box(
+        modifier = modifier.fillMaxSize()
     ) {
-        // Mode Selector: NSLookup vs Ping
-        IosSegmentedControl(
-            items = listOf("nslookup", "ping"),
-            selectedItem = testMode,
-            onItemSelected = { testMode = it },
-            itemLabel = {
-                if (it == "nslookup") (if (isPersian) "تست رزولوشن (NSLookup)" else "NSLookup Resolver")
-                else (if (isPersian) "بنچمارک پینگ (Ping)" else "Ping Benchmark")
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        if (testMode == "nslookup") {
-            // NSLookup Benchmark Card
-            IosGroupedCard(cornerRadius = 18.dp) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(AppleBlue.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Dns,
-                                contentDescription = null,
-                                tint = AppleBlue,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = if (isPersian) "تست واقعی رزولوشن (مانند nslookup ویندوز)" else "Real RFC 1035 NSLookup Benchmark",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = if (isPersian)
-                                    "ارسال پکت کوئری UDP به سرورها و استخراج واقعی IP و وضعیت RCODE"
-                                else
-                                    "Sends raw DNS query packets and verifies IP resolution & TTL",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Domain Input Field
-                    OutlinedTextField(
-                        value = targetDomain,
-                        onValueChange = { targetDomain = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true,
-                        placeholder = { Text("domain.com") },
-                        label = { Text(if (isPersian) "دامنه برای تست پاسخگویی" else "Target Domain to Resolve") },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { runNsLookupBenchmark() }),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AppleBlue,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Preset Chips
-                    val presetDomains = listOf(
-                        "google.com" to "Google",
-                        "docker.com" to (if (isPersian) "تحریم‌شکن (Docker)" else "Anti-Sanction"),
-                        "shecan.ir" to "Shecan",
-                        "wikipedia.org" to "Wikipedia",
-                        "cloudflare.com" to "Cloudflare"
-                    )
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(presetDomains) { (domain, label) ->
-                            val isSelected = targetDomain == domain
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                modifier = Modifier.clickable {
-                                    targetDomain = domain
-                                }
-                            ) {
-                                Text(
-                                    text = label,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Button(
-                        onClick = runNsLookupBenchmark,
-                        enabled = !isLookupTesting && targetDomain.isNotBlank(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(46.dp)
-                    ) {
-                        if (isLookupTesting) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = if (isPersian) "در حال تست NSLookup سرورها..." else "Querying DNS Servers...",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
-                            )
-                        } else {
-                            Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(17.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (isPersian) "شروع تست رزولوشن دامنه" else "Run NSLookup Benchmark",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-
-                    if (isLookupTesting) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp)),
-                            color = AppleBlue,
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    }
-                }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Mode Selector: NSLookup vs Ping (scrolls naturally with page)
+            item(key = "mode_selector") {
+                IosSegmentedControl(
+                    items = listOf("nslookup", "ping"),
+                    selectedItem = testMode,
+                    onItemSelected = { testMode = it },
+                    itemLabel = {
+                        if (it == "nslookup") (if (isPersian) "تست رزولوشن (NSLookup)" else "NSLookup Resolver")
+                        else (if (isPersian) "بنچمارک پینگ (Ping)" else "Ping Benchmark")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Fastest NSLookup Banner
-            AnimatedVisibility(visible = fastestLookup != null) {
-                fastestLookup?.let { fastest ->
-                    IosGroupedCard(
-                        cornerRadius = 14.dp,
-                        modifier = Modifier.border(1.dp, AppleGreen.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            if (testMode == "nslookup") {
+                // NSLookup Benchmark Card (scrolls with content)
+                item(key = "nslookup_card") {
+                    IosGroupedCard(cornerRadius = 18.dp) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .size(30.dp)
-                                        .clip(CircleShape)
-                                        .background(AppleGreen.copy(alpha = 0.15f)),
+                                        .size(32.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(AppleBlue.copy(alpha = 0.15f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.EmojiEvents,
+                                        imageVector = Icons.Default.Dns,
                                         contentDescription = null,
-                                        tint = AppleGreen,
+                                        tint = AppleBlue,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
-                                        text = "${if (isPersian) "سریع‌ترین پاسخ:" else "Fastest Resolver:"} ${fastest.dnsItem.name}",
-                                        fontSize = 13.sp,
+                                        text = if (isPersian) "تست واقعی رزولوشن (مانند nslookup ویندوز)" else "Real RFC 1035 NSLookup Benchmark",
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = "${fastest.lookupResult?.latencyMs ?: 0}ms • RCODE ${fastest.lookupResult?.rCode ?: "OK"}",
-                                        fontSize = 11.sp,
-                                        color = AppleGreen,
-                                        fontWeight = FontWeight.SemiBold
+                                        text = if (isPersian)
+                                            "ارسال پکت کوئری UDP به سرورها و استخراج واقعی IP و وضعیت RCODE"
+                                        else
+                                            "Sends raw DNS query packets and verifies IP resolution & TTL",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
 
-                            Button(
-                                onClick = { connectToDns(fastest.dnsItem) },
-                                colors = ButtonDefaults.buttonColors(containerColor = AppleGreen, contentColor = Color.White),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                modifier = Modifier.height(30.dp)
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Domain Input Field
+                            OutlinedTextField(
+                                value = targetDomain,
+                                onValueChange = { targetDomain = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true,
+                                placeholder = { Text("domain.com") },
+                                label = { Text(if (isPersian) "دامنه برای تست پاسخگویی" else "Target Domain to Resolve") },
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { runNsLookupBenchmark() }),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = AppleBlue,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Preset Chips
+                            val presetDomains = listOf(
+                                "google.com" to "Google",
+                                "docker.com" to (if (isPersian) "تحریم‌شکن (Docker)" else "Anti-Sanction"),
+                                "shecan.ir" to "Shecan",
+                                "wikipedia.org" to "Wikipedia",
+                                "cloudflare.com" to "Cloudflare"
+                            )
+
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(
-                                    text = if (isPersian) "اتصال" else "Connect",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
+                                items(presetDomains) { (domain, label) ->
+                                    val isSelected = targetDomain == domain
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        modifier = Modifier.clickable {
+                                            targetDomain = domain
+                                        }
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Button(
+                                onClick = runNsLookupBenchmark,
+                                enabled = !isLookupTesting && targetDomain.isNotBlank(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(46.dp)
+                            ) {
+                                if (isLookupTesting) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = if (isPersian) "در حال تست NSLookup سرورها..." else "Querying DNS Servers...",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp
+                                    )
+                                } else {
+                                    Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(17.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isPersian) "شروع تست رزولوشن دامنه" else "Run NSLookup Benchmark",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+
+                            if (isLookupTesting) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                LinearProgressIndicator(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(3.dp)
+                                        .clip(RoundedCornerShape(2.dp)),
+                                    color = AppleBlue,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                                 )
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(10.dp))
+                // Fastest NSLookup Banner (scrolls with content)
+                if (fastestLookup != null) {
+                    item(key = "fastest_nslookup") {
+                        val fastest = fastestLookup
+                        IosGroupedCard(
+                            cornerRadius = 14.dp,
+                            modifier = Modifier.border(1.dp, AppleGreen.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(30.dp)
+                                            .clip(CircleShape)
+                                            .background(AppleGreen.copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.EmojiEvents,
+                                            contentDescription = null,
+                                            tint = AppleGreen,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = "${if (isPersian) "سریع‌ترین پاسخ:" else "Fastest Resolver:"} ${fastest.dnsItem.name}",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "${fastest.lookupResult?.latencyMs ?: 0}ms • RCODE ${fastest.lookupResult?.rCode ?: "OK"}",
+                                            fontSize = 11.sp,
+                                            color = AppleGreen,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
 
-            // NSLookup Results List
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(bottom = 90.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
+                                Button(
+                                    onClick = { connectToDns(fastest.dnsItem) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AppleGreen, contentColor = Color.White),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text(
+                                        text = if (isPersian) "اتصال" else "Connect",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // NSLookup Results List
                 items(lookupResults, key = { it.dnsItem.id }) { item ->
                     AdvancedLookupCard(
                         state = item,
@@ -428,270 +434,257 @@ fun SpeedTestScreen(
                         isPersian = isPersian
                     )
                 }
-            }
 
-        } else {
-            // Ping Benchmark Mode
-            IosGroupedCard(cornerRadius = 18.dp) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text(
-                        text = if (isPersian) "بنچمارک و تست پینگ سرورها" else "DNS Speed Benchmark",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+            } else {
+                // Ping Benchmark Mode (scrolls with content)
+                item(key = "ping_card") {
+                    IosGroupedCard(cornerRadius = 18.dp) {
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Text(
+                                text = if (isPersian) "بنچمارک و تست پینگ سرورها" else "DNS Speed Benchmark",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
 
-                    Text(
-                        text = if (isPersian)
-                            "تست همزمان پینگ تمام سرورها برای یافتن سریع‌ترین DNS بر روی اینترنت شما"
-                        else
-                            "Benchmark all DNS providers simultaneously to find the lowest latency",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
-                    )
+                            Text(
+                                text = if (isPersian)
+                                    "تست همزمان پینگ تمام سرورها برای یافتن سریع‌ترین DNS بر روی اینترنت شما"
+                                else
+                                    "Benchmark all DNS providers simultaneously to find the lowest latency",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 18.sp
+                            )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = {
-                            if (!isPingTesting) {
-                                isPingTesting = true
-                                coroutineScope.launch {
-                                    DnsSpeedTester.benchmarkAll(allServers).collectLatest { updatedList ->
-                                        pingResults = updatedList
+                            Button(
+                                onClick = {
+                                    if (!isPingTesting) {
+                                        isPingTesting = true
+                                        coroutineScope.launch {
+                                            DnsSpeedTester.benchmarkAll(allServers).collectLatest { updatedList ->
+                                                pingResults = updatedList
+                                            }
+                                            isPingTesting = false
+                                        }
                                     }
-                                    isPingTesting = false
-                                }
-                            }
-                        },
-                        enabled = !isPingTesting,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        if (isPingTesting) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = if (isPersian) "در حال تست سرورها..." else "Benchmarking...",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp
-                            )
-                        } else {
-                            Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (isPersian) "شروع تست سرعت همزمان" else "Start Benchmark Test",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp
-                            )
-                        }
-                    }
-
-                    if (isPingTesting) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(4.dp)
-                                .clip(RoundedCornerShape(2.dp)),
-                            color = AppleBlue,
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            AnimatedVisibility(visible = fastestPing != null) {
-                fastestPing?.let { fastest ->
-                    IosGroupedCard(
-                        cornerRadius = 16.dp,
-                        modifier = Modifier.border(1.dp, AppleOrange.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
+                                },
+                                enabled = !isPingTesting,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(AppleOrange.copy(alpha = 0.15f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.EmojiEvents,
-                                            contentDescription = null,
-                                            tint = AppleOrange,
-                                            modifier = Modifier.size(19.dp)
-                                        )
-                                    }
+                                if (isPingTesting) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Text(
-                                        text = if (isPersian) "سریع‌ترین سرور پیشنهادی" else "Fastest Server Found",
-                                        fontSize = 13.sp,
-                                        color = AppleOrange,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = AppleGreen.copy(alpha = 0.12f)
-                                ) {
-                                    Text(
-                                        text = NetworkUtils.formatPing(fastest.pingMs),
-                                        color = AppleGreen,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = fastest.dnsItem.name,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = fastest.dnsItem.primaryIp,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Button(
-                                    onClick = { connectToDns(fastest.dnsItem) },
-                                    colors = ButtonDefaults.buttonColors(containerColor = AppleOrange, contentColor = Color.White),
-                                    shape = RoundedCornerShape(10.dp),
-                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                                    modifier = Modifier.height(34.dp)
-                                ) {
-                                    Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(15.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = if (isPersian) "اتصال فوری" else "Connect",
+                                        text = if (isPersian) "در حال تست سرورها..." else "Benchmarking...",
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 12.sp
+                                        fontSize = 15.sp
+                                    )
+                                } else {
+                                    Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isPersian) "شروع تست سرعت همزمان" else "Start Benchmark Test",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 15.sp
                                     )
                                 }
                             }
-                        }
-                    }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            var selectedCategoryFilter by remember { mutableStateOf<String?>(null) }
-            val categories = listOf(
-                null to if (isPersian) "همه" else "All",
-                com.afrouzi.dnsmaster.model.DnsCategory.ANTI_SANCTION.name to if (isPersian) "تحریم‌شکن" else "Anti-Sanction",
-                com.afrouzi.dnsmaster.model.DnsCategory.GAMING.name to if (isPersian) "گیمینگ" else "Gaming",
-                com.afrouzi.dnsmaster.model.DnsCategory.FAST.name to if (isPersian) "سریع" else "Fast",
-                com.afrouzi.dnsmaster.model.DnsCategory.PRIVACY.name to if (isPersian) "امنیت" else "Privacy"
-            )
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(categories) { (catKey, label) ->
-                    val isSelected = selectedCategoryFilter == catKey
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.clickable { selectedCategoryFilter = catKey }
-                    ) {
-                        Text(
-                            text = label,
-                            fontSize = 13.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            val filteredResults = remember(pingResults, selectedCategoryFilter) {
-                if (selectedCategoryFilter == null) {
-                    pingResults
-                } else {
-                    pingResults.filter { it.dnsItem.category == selectedCategoryFilter }
-                }
-            }
-
-            Box(modifier = Modifier.fillMaxSize()) {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(bottom = 90.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(filteredResults, key = { it.dnsItem.id }) { item ->
-                        SpeedTestItem(
-                            result = item,
-                            onApply = { connectToDns(item.dnsItem) },
-                            isPersian = isPersian
-                        )
-                    }
-                }
-
-                FloatingActionButton(
-                    onClick = {
-                        if (!isPingTesting) {
-                            isPingTesting = true
-                            coroutineScope.launch {
-                                DnsSpeedTester.benchmarkAll(allServers).collectLatest { updatedList ->
-                                    pingResults = updatedList
-                                }
-                                isPingTesting = false
+                            if (isPingTesting) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                LinearProgressIndicator(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(4.dp)
+                                        .clip(RoundedCornerShape(2.dp)),
+                                    color = AppleBlue,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
                             }
                         }
-                    },
-                    containerColor = AppleBlue,
-                    contentColor = Color.White,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(bottom = 16.dp, end = 8.dp)
-                ) {
-                    if (isPingTesting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.White,
-                            strokeWidth = 2.5.dp
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Bolt,
-                            contentDescription = "Refresh Benchmark"
-                        )
                     }
+                }
+
+                // Fastest Ping Banner (scrolls with content)
+                if (fastestPing != null) {
+                    item(key = "fastest_ping") {
+                        val fastest = fastestPing
+                        IosGroupedCard(
+                            cornerRadius = 16.dp,
+                            modifier = Modifier.border(1.dp, AppleOrange.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(AppleOrange.copy(alpha = 0.15f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.EmojiEvents,
+                                                contentDescription = null,
+                                                tint = AppleOrange,
+                                                modifier = Modifier.size(19.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = if (isPersian) "سریع‌ترین سرور پیشنهادی" else "Fastest Server Found",
+                                            fontSize = 13.sp,
+                                            color = AppleOrange,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = AppleGreen.copy(alpha = 0.12f)
+                                    ) {
+                                        Text(
+                                            text = NetworkUtils.formatPing(fastest.pingMs),
+                                            color = AppleGreen,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = fastest.dnsItem.name,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = fastest.dnsItem.primaryIp,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(12.dp))
+
+                                    Button(
+                                        onClick = { connectToDns(fastest.dnsItem) },
+                                        colors = ButtonDefaults.buttonColors(containerColor = AppleOrange, contentColor = Color.White),
+                                        shape = RoundedCornerShape(10.dp),
+                                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                        modifier = Modifier.height(34.dp)
+                                    ) {
+                                        Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(15.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = if (isPersian) "اتصال فوری" else "Connect",
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Category Filter Pills
+                item(key = "category_filters") {
+                    val categories = listOf(
+                        null to if (isPersian) "همه" else "All",
+                        com.afrouzi.dnsmaster.model.DnsCategory.ANTI_SANCTION.name to if (isPersian) "تحریم‌شکن" else "Anti-Sanction",
+                        com.afrouzi.dnsmaster.model.DnsCategory.GAMING.name to if (isPersian) "گیمینگ" else "Gaming",
+                        com.afrouzi.dnsmaster.model.DnsCategory.FAST.name to if (isPersian) "سریع" else "Fast",
+                        com.afrouzi.dnsmaster.model.DnsCategory.PRIVACY.name to if (isPersian) "امنیت" else "Privacy"
+                    )
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(categories) { (catKey, label) ->
+                            val isSelected = selectedCategoryFilter == catKey
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.clickable { selectedCategoryFilter = catKey }
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                items(filteredResults, key = { it.dnsItem.id }) { item ->
+                    SpeedTestItem(
+                        result = item,
+                        onApply = { connectToDns(item.dnsItem) },
+                        isPersian = isPersian
+                    )
+                }
+            }
+        }
+
+        // Floating Action Button for Ping mode refresh
+        if (testMode == "ping") {
+            FloatingActionButton(
+                onClick = {
+                    if (!isPingTesting) {
+                        isPingTesting = true
+                        coroutineScope.launch {
+                            DnsSpeedTester.benchmarkAll(allServers).collectLatest { updatedList ->
+                                pingResults = updatedList
+                            }
+                            isPingTesting = false
+                        }
+                    }
+                },
+                containerColor = AppleBlue,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 76.dp, end = 16.dp)
+            ) {
+                if (isPingTesting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.5.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Bolt,
+                        contentDescription = "Refresh Benchmark"
+                    )
                 }
             }
         }

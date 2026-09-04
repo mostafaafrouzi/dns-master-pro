@@ -1,9 +1,20 @@
 ## فارسی
 
-### نسخهٔ ۱.۲.۰ (جدید)
-**فونت اختصاصی IRANSansX Eco، بنچمارک واقعی رزولوشن دامنه (NSLookup Engine)، نوار ناوبری تطبیقی و معرفی کامل توسعه‌دهنده.**
+### نسخهٔ ۱.۲.۱ (جدید)
+**اسکرول روان تمام‌صفحه در بخش‌های تست سرعت و اصلاح نمایش و خوانایی کامل فیلد جستجو.**
 
-**تغییرات و قابلیت‌های جدید نسخه ۱.۲.۰:**
+**تغییرات و بهبودهای نسخه ۱.۲.۱:**
+- **اسکرول یکپارچه تمام‌صفحه در تب‌های تست سرعت:**
+  - تبدیل هر دو تب «تست رزولوشن (NSLookup)» و «بنچمارک پینگ (Ping)» به یک محفظه اسکرول یکپارچه (`LazyColumn`).
+  - رفع مشکل شناور و ثابت ماندن کارت‌های بالای صفحه؛ اکنون با اسکرول به سمت پایین، کارت‌های تنظیمات و تراشه‌های دسته‌بندی به راحتی به بالا حرکت کرده و ۱۰۰٪ ارتفاع صفحه به فهرست سرورها اختصاص می‌یابد.
+  - تعبیه ارگونومیک دکمه شناور تست سریع (FAB) در گوشه پایین صفحه متناسب با سیستم‌های ناوبری اندروید.
+- **بهبود کامل فیلد جستجوی سرورها:**
+  - بازطراحی نوار جستجو با `BasicTextField` و کانتینر iOS؛ حذف لایه‌های اضافی پدینگ داخلی که مانع دید کامل متن می‌شد.
+  - نمایش کاملاً واضح، خوانا و بدون بریدگی حروف فارسی و انگلیسی در متن ورودی و پلیس‌هولدر.
+
+---
+
+### نسخهٔ ۱.۲.۰
 - **فونت اختصاصی IRANSansX Eco:** پیاده‌سازی تایپوگرافی اصیل و حرفه‌ای فارسی با فونت ایران‌سنس ایکس اکو (شامل ارقام فارسی FaNum برای زمان و پینگ) در تمامی صفحات و المان‌های برنامه با کرنینگ و تراز خطی دقیق.
 - **موتور تست واقعی رزولوشن دامنه (RFC 1035 UDP DNS Engine):**
   - شبیه‌ساز واقعی ابزار NSLookup ویندوز و دیگ لینوکس بر بستر پکت‌های خام UDP بدون اتکا به پینگ‌های ICMP ساده یا کش سیستم‌عامل.
@@ -39,10 +50,21 @@
 
 ## English
 
-### Version 1.2.0 (Latest)
-**IRANSansX Eco Typography, Real RFC 1035 UDP NSLookup Engine & Benchmark, Adaptive System Insets, and Developer Profile.**
+### Version 1.2.1 (Latest)
+**Unified Full-Height Scrollable Speed Test Layout & Unclipped Server Search Input.**
 
-**What's New in v1.2.0:**
+**What's New in v1.2.1:**
+- **Unified Full-Screen Scrolling on Speed Test Tabs:**
+  - Integrated both "Resolution Test (NSLookup)" and "Ping Benchmark" modes into a single top-to-bottom scrollable container (`LazyColumn`).
+  - Configuration cards and filter pills now naturally scroll upward with the page, dedicating 100% of the screen height to the server list.
+  - The Quick Benchmark Floating Action Button (FAB) comfortably docks in the bottom-end corner above system navigation.
+- **Enhanced Server Search Input Display & Readability:**
+  - Redesigned search bar using `BasicTextField` with custom iOS-styled container, eliminating cramped default paddings.
+  - Text and placeholder are now fully visible, perfectly centered vertically, and crisp with zero character clipping in both Persian and English.
+
+---
+
+### Version 1.2.0
 - **IRANSansX Eco Typography:** Integrated premium Persian typography with the official IranSansX Eco font family (including FaNum Persian digits for counters and latencies) across all screens and UI components with precise line height and baseline metrics.
 - **RFC 1035 UDP DNS Lookup Engine & Benchmark:**
   - Custom raw UDP socket query builder & parser operating identically to Windows `nslookup` and Linux `dig`.

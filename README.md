@@ -96,7 +96,7 @@
 | Application ID | `com.afrouzi.dnsmaster` |
 | minSdk / targetSdk / compileSdk | 24 / 36 / 36 |
 | Kotlin / Compose Compiler | 2.0.21 |
-| Version | 1.2.0 |
+| Version | 1.2.1 |
 
 </div>
 
