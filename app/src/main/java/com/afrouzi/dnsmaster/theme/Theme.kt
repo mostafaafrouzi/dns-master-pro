@@ -8,39 +8,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = NeonCyan,
-    onPrimary = Color(0xFF00363D),
-    primaryContainer = Color(0xFF004F58),
-    onPrimaryContainer = Color(0xFF97F0FF),
-    secondary = ElectricIndigo,
+    primary = AppleBlueDark,
+    onPrimary = Color.White,
+    primaryContainer = AppleBlueDark.copy(alpha = 0.2f),
+    onPrimaryContainer = AppleBlueDark,
+    secondary = AppleIndigoDark,
     onSecondary = Color.White,
-    tertiary = NeonEmerald,
+    tertiary = AppleGreenDark,
     onTertiary = Color.White,
-    background = SlateDarkBackground,
-    onBackground = TextWhitePrimary,
-    surface = SlateDarkSurface,
-    onSurface = TextWhitePrimary,
-    surfaceVariant = SlateDarkSurfaceVariant,
-    onSurfaceVariant = TextWhiteSecondary,
-    outline = SlateDarkBorder
+    background = IosDarkBackground,
+    onBackground = IosDarkTextPrimary,
+    surface = IosDarkSurface,
+    onSurface = IosDarkTextPrimary,
+    surfaceVariant = IosDarkSurfaceVariant,
+    onSurfaceVariant = IosDarkTextSecondary,
+    outline = IosDarkSeparator
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF0284C7),
+    primary = AppleBlue,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE0F2FE),
-    onPrimaryContainer = Color(0xFF0369A1),
-    secondary = ElectricIndigo,
+    primaryContainer = AppleBlue.copy(alpha = 0.12f),
+    onPrimaryContainer = AppleBlue,
+    secondary = AppleIndigo,
     onSecondary = Color.White,
-    tertiary = NeonEmerald,
+    tertiary = AppleGreen,
     onTertiary = Color.White,
-    background = SlateLightBackground,
-    onBackground = TextDarkPrimary,
-    surface = SlateLightSurface,
-    onSurface = TextDarkPrimary,
-    surfaceVariant = SlateLightSurfaceVariant,
-    onSurfaceVariant = TextDarkSecondary,
-    outline = SlateLightBorder
+    background = IosLightBackground,
+    onBackground = IosLightTextPrimary,
+    surface = IosLightSurface,
+    onSurface = IosLightTextPrimary,
+    surfaceVariant = IosLightSurfaceVariant,
+    onSurfaceVariant = IosLightTextSecondary,
+    outline = IosLightSeparator
 )
 
 @Composable

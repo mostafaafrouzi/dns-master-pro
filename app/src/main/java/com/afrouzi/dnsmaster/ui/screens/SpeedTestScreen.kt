@@ -8,8 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,10 +37,8 @@ import com.afrouzi.dnsmaster.model.SpeedTestResult
 import com.afrouzi.dnsmaster.model.SpeedTestStatus
 import com.afrouzi.dnsmaster.model.VpnConnectionState
 import com.afrouzi.dnsmaster.service.DnsVpnService
-import com.afrouzi.dnsmaster.theme.NeonAmber
-import com.afrouzi.dnsmaster.theme.NeonCyan
-import com.afrouzi.dnsmaster.theme.PingGreat
-import com.afrouzi.dnsmaster.ui.components.SpeedTestItem
+import com.afrouzi.dnsmaster.theme.*
+import com.afrouzi.dnsmaster.ui.components.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -111,18 +111,11 @@ fun SpeedTestScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Benchmark Header Card
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
+        IosGroupedCard(cornerRadius = 18.dp) {
+            Column(modifier = Modifier.padding(18.dp)) {
                 Text(
                     text = if (isPersian) "بنچمارک و تست پینگ سرورها" else "DNS Speed Benchmark",
-                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -134,8 +127,9 @@ fun SpeedTestScreen(
                         "تست همزمان پینگ تمام سرورها برای یافتن سریع‌ترین DNS بر روی اینترنت شما"
                     else
                         "Benchmark all DNS providers simultaneously to find the lowest latency",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 18.sp
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -153,30 +147,30 @@ fun SpeedTestScreen(
                         }
                     },
                     enabled = !isTesting,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
                 ) {
                     if (isTesting) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(22.dp),
-                            color = Color.Black,
-                            strokeWidth = 2.5.dp
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = if (isPersian) "در حال تست سرورها..." else "Benchmarking...",
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp
                         )
                     } else {
-                        Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = if (isPersian) "شروع تست سرعت همزمان" else "Start Benchmark Test",
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp
                         )
                     }
@@ -187,69 +181,105 @@ fun SpeedTestScreen(
                     LinearProgressIndicator(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = NeonCyan
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = AppleBlue,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-        // Fastest Server Spotlight Banner
         AnimatedVisibility(visible = fastestResult != null) {
             fastestResult?.let { fastest ->
-                Card(
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B10)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.5.dp, NeonAmber, RoundedCornerShape(18.dp))
+                IosGroupedCard(
+                    cornerRadius = 16.dp,
+                    modifier = Modifier.border(1.dp, AppleOrange.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.EmojiEvents,
-                                contentDescription = null,
-                                tint = NeonAmber,
-                                modifier = Modifier.size(28.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(AppleOrange.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.EmojiEvents,
+                                        contentDescription = null,
+                                        tint = AppleOrange,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = if (isPersian) "سریع‌ترین سرور پیشنهادی" else "Fastest Server Found",
-                                    fontSize = 12.sp,
-                                    color = NeonAmber,
+                                    fontSize = 13.sp,
+                                    color = AppleOrange,
                                     fontWeight = FontWeight.SemiBold
                                 )
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = AppleGreen.copy(alpha = 0.12f)
+                            ) {
                                 Text(
-                                    text = "${fastest.dnsItem.name} (${NetworkUtils.formatPing(fastest.pingMs)})",
-                                    fontSize = 15.sp,
+                                    text = NetworkUtils.formatPing(fastest.pingMs),
+                                    color = AppleGreen,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                 )
                             }
                         }
 
-                        Button(
-                            onClick = { connectToDns(fastest.dnsItem) },
-                            colors = ButtonDefaults.buttonColors(containerColor = NeonAmber, contentColor = Color.Black),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.height(36.dp)
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (isPersian) "اتصال فوری" else "Connect",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = fastest.dnsItem.name,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = fastest.dnsItem.primaryIp,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Button(
+                                onClick = { connectToDns(fastest.dnsItem) },
+                                colors = ButtonDefaults.buttonColors(containerColor = AppleOrange, contentColor = Color.White),
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (isPersian) "اتصال فوری" else "Connect",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -258,7 +288,6 @@ fun SpeedTestScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Category Filter Chips
         var selectedCategoryFilter by remember { mutableStateOf<String?>(null) }
         val categories = listOf(
             null to if (isPersian) "همه" else "All",
@@ -268,24 +297,29 @@ fun SpeedTestScreen(
             com.afrouzi.dnsmaster.model.DnsCategory.PRIVACY.name to if (isPersian) "امنیت" else "Privacy"
         )
 
-        androidx.compose.foundation.lazy.LazyRow(
+        LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             items(categories) { (catKey, label) ->
-                FilterChip(
-                    selected = selectedCategoryFilter == catKey,
-                    onClick = { selectedCategoryFilter = catKey },
-                    label = { Text(label, fontSize = 12.sp, fontWeight = FontWeight.Medium) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = NeonCyan.copy(alpha = 0.2f),
-                        selectedLabelColor = NeonCyan
+                val isSelected = selectedCategoryFilter == catKey
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.clickable { selectedCategoryFilter = catKey }
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = 13.sp,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                     )
-                )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         val filteredResults = remember(testResults, selectedCategoryFilter) {
             if (selectedCategoryFilter == null) {
@@ -311,7 +345,7 @@ fun SpeedTestScreen(
                 }
             }
 
-            // Floating Refresh Button (Inspired by competitor)
+            // Floating Refresh Button (iOS styled Apple Blue)
             FloatingActionButton(
                 onClick = {
                     if (!isTesting) {
@@ -324,8 +358,9 @@ fun SpeedTestScreen(
                         }
                     }
                 },
-                containerColor = NeonCyan,
-                contentColor = Color.Black,
+                containerColor = AppleBlue,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(bottom = 16.dp, end = 8.dp)
@@ -333,12 +368,12 @@ fun SpeedTestScreen(
                 if (isTesting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = Color.Black,
+                        color = Color.White,
                         strokeWidth = 2.5.dp
                     )
                 } else {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Bolt,
+                        imageVector = Icons.Default.Bolt,
                         contentDescription = "Refresh Benchmark"
                     )
                 }

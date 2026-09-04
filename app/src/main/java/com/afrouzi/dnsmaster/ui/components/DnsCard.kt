@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,9 +36,9 @@ fun DnsCard(
     modifier: Modifier = Modifier,
     isPersian: Boolean = false
 ) {
-    val borderColor = if (isSelected) NeonCyan else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+    val borderColor = if (isSelected) AppleBlue else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
     val cardBackground = if (isSelected) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        AppleBlue.copy(alpha = 0.08f)
     } else {
         MaterialTheme.colorScheme.surface
     }
@@ -49,25 +50,25 @@ fun DnsCard(
     }
 
     val categoryColor = when (categoryEnum) {
-        DnsCategory.FAST -> NeonCyan
-        DnsCategory.ANTI_SANCTION -> NeonRose
-        DnsCategory.GAMING -> NeonEmerald
-        DnsCategory.PRIVACY -> ElectricPurple
-        DnsCategory.FAMILY -> NeonAmber
-        DnsCategory.CUSTOM -> ElectricIndigo
-        DnsCategory.ALL -> NeonCyan
+        DnsCategory.FAST -> AppleBlue
+        DnsCategory.ANTI_SANCTION -> AppleOrange
+        DnsCategory.GAMING -> AppleGreen
+        DnsCategory.PRIVACY -> ApplePurple
+        DnsCategory.FAMILY -> AppleTeal
+        DnsCategory.CUSTOM -> AppleIndigo
+        DnsCategory.ALL -> AppleBlue
     }
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = cardBackground),
         modifier = modifier
             .fillMaxWidth()
-            .border(1.5.dp, borderColor, RoundedCornerShape(16.dp))
+            .border(if (isSelected) 1.5.dp else 0.5.dp, borderColor, RoundedCornerShape(14.dp))
             .clickable { onSelect() }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header: Name, Category Chip, Favorite Star
+        Column(modifier = Modifier.padding(14.dp)) {
+            // Header: Name, Category Pill, Favorite & Delete
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -81,60 +82,59 @@ fun DnsCard(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = "Selected",
-                            tint = NeonCyan,
-                            modifier = Modifier.size(20.dp)
+                            tint = AppleBlue,
+                            modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     Text(
                         text = item.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Category Badge
+                    // Category Badge (iOS Translucent Tag)
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(categoryColor.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(categoryColor.copy(alpha = 0.12f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
                         Text(
                             text = if (isPersian) categoryEnum.titleFa else categoryEnum.titleEn,
                             color = categoryColor,
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
-                    // Favorite Button
                     IconButton(
                         onClick = onToggleFavorite,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             imageVector = if (item.isFavorite) Icons.Default.Star else Icons.Outlined.StarBorder,
                             contentDescription = "Favorite",
-                            tint = if (item.isFavorite) NeonAmber else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
+                            tint = if (item.isFavorite) AppleOrange else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.size(19.dp)
                         )
                     }
 
                     if (item.isCustom && onDelete != null) {
                         IconButton(
                             onClick = onDelete,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "Delete",
-                                tint = NeonRose,
+                                tint = AppleRed,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -144,64 +144,43 @@ fun DnsCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // IPs Row
+            // IP Addresses Row
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 Text(
                     text = "IP 1: ${item.primaryIp}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 if (item.secondaryIp.isNotBlank()) {
-                    Spacer(modifier = Modifier.width(16.dp))
                     Text(
                         text = "IP 2: ${item.secondaryIp}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             // Description
-            val desc = if (isPersian && item.descriptionFa.isNotBlank()) item.descriptionFa else item.descriptionEn
+            val desc = if (isPersian) item.descriptionFa else item.descriptionEn
             if (desc.isNotBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = desc,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 16.sp
                 )
-            }
-
-            // Ping Badge if tested
-            if (item.pingMs != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                val pingColor = when {
-                    item.pingMs < 40 -> PingGreat
-                    item.pingMs < 80 -> PingGood
-                    item.pingMs < 150 -> PingFair
-                    else -> PingPoor
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(pingColor)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = NetworkUtils.formatPing(item.pingMs),
-                        color = pingColor,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
     }

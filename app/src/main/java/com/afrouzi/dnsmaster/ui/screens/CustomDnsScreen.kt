@@ -1,14 +1,13 @@
 package com.afrouzi.dnsmaster.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +20,8 @@ import com.afrouzi.dnsmaster.core.utils.NetworkUtils
 import com.afrouzi.dnsmaster.data.repository.DnsRepository
 import com.afrouzi.dnsmaster.model.DnsCategory
 import com.afrouzi.dnsmaster.model.DnsItem
-import com.afrouzi.dnsmaster.theme.NeonCyan
+import com.afrouzi.dnsmaster.theme.*
+import com.afrouzi.dnsmaster.ui.components.IosGroupedCard
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -93,163 +93,220 @@ fun CustomDnsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Back Header
+        // iOS Navigation Bar Header
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = AppleBlue
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = if (isPersian) "تعریف سرور جدید" else "New DNS Server",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = if (isPersian) "تعریف DNS سفارشی" else "Add Custom DNS",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+
+            TextButton(
+                onClick = validateAndSave,
+                colors = ButtonDefaults.textButtonColors(contentColor = AppleBlue)
+            ) {
+                Text(
+                    text = if (isPersian) "ذخیره" else "Save",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Card Container
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                // Name Field
+        // Section 1: Server Identity
+        Text(
+            text = (if (isPersian) "اطلاعات سرور" else "SERVER INFO").uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 12.dp, bottom = 6.dp)
+        )
+
+        IosGroupedCard(cornerRadius = 14.dp) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = {
                         name = it
                         if (nameError != null) nameError = null
                     },
-                    label = { Text(if (isPersian) "عنوان یا نام سرور" else "Server Name / Title") },
-                    placeholder = { Text(if (isPersian) "مثال: کلودفلر شخصی" else "e.g. My Private DNS") },
+                    label = { Text(if (isPersian) "نام یا عنوان سرور" else "Server Name") },
+                    placeholder = { Text(if (isPersian) "مثال: کلودفلر اختصاصی" else "e.g. My Secure DNS") },
                     isError = nameError != null,
-                    supportingText = nameError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                    supportingText = nameError?.let { { Text(it, color = AppleRed) } },
                     singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppleBlue,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Primary IP Field
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text(if (isPersian) "توضیحات (اختیاری)" else "Description (Optional)") },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppleBlue,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Section 2: IP Addresses
+        Text(
+            text = (if (isPersian) "آدرس‌های DNS" else "DNS ADDRESSES").uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 12.dp, bottom = 6.dp)
+        )
+
+        IosGroupedCard(cornerRadius = 14.dp) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 OutlinedTextField(
                     value = primaryIp,
                     onValueChange = {
                         primaryIp = it
                         if (primaryIpError != null) primaryIpError = null
                     },
-                    label = { Text(if (isPersian) "آدرس آی‌پی اصلی (IPv4 یا IPv6)" else "Primary DNS IP (IPv4 or IPv6)") },
+                    label = { Text(if (isPersian) "آی‌پی اصلی (اجباری)" else "Primary DNS (Required)") },
                     placeholder = { Text("1.1.1.1") },
                     isError = primaryIpError != null,
-                    supportingText = primaryIpError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                    supportingText = primaryIpError?.let { { Text(it, color = AppleRed) } },
                     singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppleBlue,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Secondary IP Field
                 OutlinedTextField(
                     value = secondaryIp,
                     onValueChange = {
                         secondaryIp = it
                         if (secondaryIpError != null) secondaryIpError = null
                     },
-                    label = { Text(if (isPersian) "آدرس آی‌پی کمکی (اختیاری)" else "Secondary DNS IP (Optional)") },
+                    label = { Text(if (isPersian) "آی‌پی ثانویه (اختیاری)" else "Secondary DNS (Optional)") },
                     placeholder = { Text("1.0.0.1") },
                     isError = secondaryIpError != null,
-                    supportingText = secondaryIpError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                    supportingText = secondaryIpError?.let { { Text(it, color = AppleRed) } },
                     singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppleBlue,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+        }
 
-                Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-                // Category Selector
-                Text(
-                    text = if (isPersian) "دسته‌بندی" else "Category",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+        // Section 3: Category
+        Text(
+            text = (if (isPersian) "دسته‌بندی" else "CATEGORY").uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 12.dp, bottom = 6.dp)
+        )
 
-                var categoryExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(
-                    expanded = categoryExpanded,
-                    onExpandedChange = { categoryExpanded = !categoryExpanded },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = if (isPersian) selectedCategory.titleFa else selectedCategory.titleEn,
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = categoryExpanded,
-                        onDismissRequest = { categoryExpanded = false }
-                    ) {
-                        DnsCategory.values().filter { it != DnsCategory.ALL }.forEach { cat ->
-                            DropdownMenuItem(
-                                text = { Text(if (isPersian) cat.titleFa else cat.titleEn) },
-                                onClick = {
-                                    selectedCategory = cat
-                                    categoryExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Optional Description Field
+        IosGroupedCard(cornerRadius = 14.dp) {
+            var categoryExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = !categoryExpanded },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
                 OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text(if (isPersian) "توضیحات (اختیاری)" else "Description (Optional)") },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    value = if (isPersian) selectedCategory.titleFa else selectedCategory.titleEn,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppleBlue,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Save Button
-                Button(
-                    onClick = validateAndSave,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
+                ExposedDropdownMenu(
+                    expanded = categoryExpanded,
+                    onDismissRequest = { categoryExpanded = false }
                 ) {
-                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (isPersian) "ذخیره و انتخاب سرور" else "Save & Select Server",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
+                    DnsCategory.values().filter { it != DnsCategory.ALL }.forEach { cat ->
+                        DropdownMenuItem(
+                            text = { Text(if (isPersian) cat.titleFa else cat.titleEn) },
+                            onClick = {
+                                selectedCategory = cat
+                                categoryExpanded = false
+                            }
+                        )
+                    }
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Primary Save Button
+        Button(
+            onClick = validateAndSave,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (isPersian) "ذخیره و استفاده" else "Save & Apply",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

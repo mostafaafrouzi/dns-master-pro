@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,25 +30,25 @@ fun SpeedTestItem(
     modifier: Modifier = Modifier,
     isPersian: Boolean = false
 ) {
-    val borderColor = if (result.isFastest) NeonAmber else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+    val borderColor = if (result.isFastest) AppleOrange else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
     val cardBackground = if (result.isFastest) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        AppleOrange.copy(alpha = 0.08f)
     } else {
         MaterialTheme.colorScheme.surface
     }
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = cardBackground),
         modifier = modifier
             .fillMaxWidth()
-            .border(if (result.isFastest) 2.dp else 1.dp, borderColor, RoundedCornerShape(16.dp))
+            .border(if (result.isFastest) 1.5.dp else 0.5.dp, borderColor, RoundedCornerShape(14.dp))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 13.dp)
                 .fillMaxWidth()
         ) {
             // Left: Title, IPs, and Fastest Badge
@@ -57,25 +58,26 @@ fun SpeedTestItem(
                         Icon(
                             imageVector = Icons.Default.EmojiEvents,
                             contentDescription = "Fastest",
-                            tint = NeonAmber,
-                            modifier = Modifier.size(22.dp)
+                            tint = AppleOrange,
+                            modifier = Modifier.size(19.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                     }
 
                     Text(
                         text = result.dnsItem.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
 
                 Text(
-                    text = "${result.dnsItem.primaryIp}${if (result.dnsItem.secondaryIp.isNotBlank()) " | ${result.dnsItem.secondaryIp}" else ""}",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "${result.dnsItem.primaryIp}${if (result.dnsItem.secondaryIp.isNotBlank()) " • ${result.dnsItem.secondaryIp}" else ""}",
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -85,32 +87,29 @@ fun SpeedTestItem(
                 when (result.status) {
                     SpeedTestStatus.TESTING -> {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.5.dp,
-                            color = NeonCyan
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = AppleBlue
                         )
                     }
                     SpeedTestStatus.SUCCESS -> {
                         val ping = result.pingMs ?: 0L
                         val badgeColor = when {
-                            ping < 40 -> PingGreat
-                            ping < 80 -> PingGood
-                            ping < 150 -> PingFair
-                            else -> PingPoor
+                            ping < 100 -> AppleGreen
+                            ping < 250 -> AppleBlue
+                            else -> AppleOrange
                         }
 
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(badgeColor.copy(alpha = 0.15f))
-                                .border(1.dp, badgeColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = badgeColor.copy(alpha = 0.12f)
                         ) {
                             Text(
-                                text = NetworkUtils.formatPing(result.pingMs),
+                                text = "${ping}ms",
                                 color = badgeColor,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
 
@@ -118,40 +117,46 @@ fun SpeedTestItem(
 
                         Button(
                             onClick = onApply,
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (result.isFastest) NeonAmber else MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = if (result.isFastest) Color.Black else MaterialTheme.colorScheme.onPrimaryContainer
+                                containerColor = if (result.isFastest) AppleOrange else AppleBlue,
+                                contentColor = Color.White
                             ),
-                            modifier = Modifier.height(34.dp)
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.height(32.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Bolt,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = if (isPersian) "اتصال" else "Apply",
+                                text = if (isPersian) "اتصال" else "Use",
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
-                    SpeedTestStatus.TIMEOUT, SpeedTestStatus.ERROR -> {
-                        Text(
-                            text = if (isPersian) "تایم‌اوت" else "Timeout",
-                            color = PingPoor,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                    SpeedTestStatus.TIMEOUT,
+                    SpeedTestStatus.ERROR -> {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = AppleRed.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                text = if (result.status == SpeedTestStatus.TIMEOUT) {
+                                    if (isPersian) "مهلت تمام" else "Timeout"
+                                } else {
+                                    if (isPersian) "خطا" else "Error"
+                                },
+                                color = AppleRed,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                     SpeedTestStatus.IDLE -> {
                         Text(
                             text = "--",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                     }
                 }

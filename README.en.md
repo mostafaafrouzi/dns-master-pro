@@ -2,15 +2,15 @@
 
 [فارسی](README.md) · **English**
 
-A modern, high-performance, and privacy-first Android application to change DNS servers and benchmark ping latency. Features a cyber-neon Material 3 interface, pre-configured anti-sanction servers, and zero ads.
+A high-performance, minimalist Android DNS changer and live multi-server benchmark app, crafted with **Apple iOS Human Interface Guidelines (HIG)** aesthetic, pre-configured anti-sanction resolvers, dual-stack IPv4/IPv6 support, and zero ads.
 
 <div dir="ltr">
 
-[![Latest Release](https://img.shields.io/github/v/release/mostafaafrouzi/android-dns-changer?style=flat-square&color=00F0FF)](https://github.com/mostafaafrouzi/android-dns-changer/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/mostafaafrouzi/android-dns-changer?style=flat-square&color=007AFF)](https://github.com/mostafaafrouzi/android-dns-changer/releases/latest)
 [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B%20(API%2024%2B)-3DDC84?style=flat-square&logo=android)](https://android.com)
+[![Design](https://img.shields.io/badge/Design-Apple%20iOS%20HIG-007AFF?style=flat-square&logo=apple)](https://developer.apple.com/design/human-interface-guidelines/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 [![Ad--Free](https://img.shields.io/badge/Ads-100%25%20Free-success?style=flat-square)](#privacy--security)
-[![Material 3](https://img.shields.io/badge/Design-Material%203%20Compose-purple?style=flat-square)](https://m3.material.io)
 
 </div>
 
@@ -18,43 +18,46 @@ A modern, high-performance, and privacy-first Android application to change DNS 
 
 ## Why DNS Master Pro?
 
-Most DNS changing applications on Google Play are cluttered with **intrusive full-screen video ads**, outdated layouts from Android 5/6, and lack regional developer resolvers.
+Most DNS changing applications on Google Play are cluttered with **intrusive full-screen video ads**, heavy battery consumption, and outdated user interfaces.
 
-**DNS Master Pro** is built with modern Jetpack Compose Material 3, glowing cyber-neon accents, and instant responsiveness. It runs a lightweight local VPN tunnel strictly for port 53 (DNS) queries. **Your downloads, browsing sessions, and personal traffic are NEVER proxied through remote servers, ensuring 100% maximum download speeds and zero latency penalty.**
+**DNS Master Pro** has been completely reimagined around Apple iOS Human Interface Guidelines (HIG) — featuring Inset Grouped cards, segmented controls, spring physics action buttons, and official Apple System color tokens. Its high-efficiency local TUN forwarder operates strictly on port 53 (DNS) with zero packet loss. **Your downloads, browsing traffic, and personal data never touch third-party proxy servers, guaranteeing full internet bandwidth and zero latency impact.**
 
 ---
 
 ## Key Features
 
-### 1. Pre-configured Global & Anti-Sanction Resolvers
-- **Anti-Sanction Resolvers:** Shecan, 403 Online, Electro, Begzar, and Radar Game for accessing restricted developer services, libraries, and gaming servers.
-- **Top Global Providers:** Cloudflare (1.1.1.1), Google Public DNS, Quad9 Security, Cisco OpenDNS, AdGuard, Mullvad, and CleanBrowsing.
-- **Dual-Stack IPv4 & IPv6 Support:** Official IPv6 addresses for modern dual-stack networks.
+### 1. Apple iOS HIG Minimalist Design System
+- **Inset Grouped Layout:** Clean, structured cards with iOS-standard paddings and dividers.
+- **Native Segmented Controls:** Smooth switching between English / Persian and Light / Dark themes.
+- **Apple System Color Palette:** Featuring official `#007AFF` (Apple Blue), `#34C759` (Apple Green), `#FF9500` (Apple Orange), pure OLED black (`#000000`), and Apple's signature `#F2F2F7` grouped background.
+- **Spring Physics Connection Orb:** Bouncy haptic feel (`MediumBouncy` damping) with gentle radiant aura in connected state.
 
-### 2. Multi-Server Ping Benchmark
-- Real-time UDP socket ping tester measuring accurate round-trip time (RTT in ms).
-- Automated **Golden Trophy Spotlight Card** highlighting the lowest-latency server for your network.
-- Instant **"Apply ⚡"** button on every benchmark card for 1-tap activation.
-- Category filter chips: **All**, **Anti-Sanction**, **Gaming**, **Fast**, and **Security**.
-- Floating Action Button (FAB) to instantly rerun benchmarks without scrolling.
+### 2. High-Performance, Zero-Packet-Loss DNS Engine
+- Clean TUN interface loopback isolation (`192.0.2.1/32` and `192.0.2.53/32`) ensuring standard web traffic remains 100% untouched.
+- Direct stream buffer pipeline avoiding GC drops and heap buffer underflows.
 
-### 3. Live Network Diagnostics
-- Real-time inspection of active transport (**Wi-Fi** or **Mobile Cellular**).
-- Online internet connectivity verification badge.
-- Active IP protocol detection (**IPv4** and **IPv6**).
-- Local device IP address display.
+### 3. Pre-configured Global & Anti-Sanction Resolvers
+- **Anti-Sanction Resolvers:** Shecan, 403 Online, Electro, Begzar, and Radar Game for accessing restricted developer tools, cloud platforms, and gaming networks.
+- **Top Global Providers:** Cloudflare (1.1.1.1), Google Public DNS (8.8.8.8), Quad9 Security, Cisco OpenDNS, AdGuard, Mullvad, and CleanBrowsing.
+- **Dual-Stack IPv4 & IPv6:** Full primary and secondary IPv4 & IPv6 configuration.
 
-### 4. 100% Local Tunnel Guarantee
-- Complete transparency: DNS Master operates as a local resolver without proxying web traffic or collecting telemetry.
+### 4. Multi-Server Ping Benchmark
+- Concurrently pings multiple resolvers using real UDP DNS queries to calculate precise round-trip latency (ms).
+- Automatically highlights the fastest server with a spotlight banner and 1-tap **"Connect"** button.
+- Categorized filtering: **All**, **Anti-Sanction**, **Gaming**, **Fast**, and **Security**.
 
 ### 5. Quick Settings Tile
-- Dedicated Android Quick Panel Tile allowing you to toggle DNS protection directly from the system notification shade.
+- Toggle DNS protection directly from Android's Quick Settings notification panel.
 
-### 6. Session Disconnection Summary
-- Clean dialog displayed upon disconnect showing the exact duration of the session and the server disconnected.
+### 6. Live Network Diagnostics
+- Real-time detection of active network interface (Wi-Fi / Cellular).
+- Online connectivity check, active protocol badges (IPv4 / IPv6), and local device IP.
 
-### 7. Custom DNS Management
-- Add custom DNS entries with title, category, and automatic IPv4/IPv6 address validation.
+### 7. Session Disconnection Summary
+- Detailed modal summary showing connection duration and server used upon disconnecting.
+
+### 8. Custom DNS Management
+- Easily register custom DNS servers with category classification and IPv4/IPv6 validation.
 
 ---
 
@@ -62,21 +65,17 @@ Most DNS changing applications on Google Play are cluttered with **intrusive ful
 
 <div align="center">
 
-| Home Screen (Connected & Live Ping) | Network Diagnostics & Local Guarantee |
-| :---: | :---: |
-| <img src="docs/screenshots/01_home_connected.png" width="320"/> | <img src="docs/screenshots/02_network_diagnostics.png" width="320"/> |
+| Home (Dark - Connected) | Home (Light - Connected) | Server Directory |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/01_home_connected.png" width="260"/> | <img src="docs/screenshots/02_home_light.png" width="260"/> | <img src="docs/screenshots/03_server_list.png" width="260"/> |
 
-| Speed Benchmark with Instant Connect | Category Filter (Gaming & Anti-Sanction) |
-| :---: | :---: |
-| <img src="docs/screenshots/03_speedtest_benchmark.png" width="320"/> | <img src="docs/screenshots/04_speedtest_filter.png" width="320"/> |
+| Live Ping Benchmark | Custom DNS Manager | Session Summary Modal |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/04_speedtest_benchmark.png" width="260"/> | <img src="docs/screenshots/05_custom_dns.png" width="260"/> | <img src="docs/screenshots/06_session_summary.png" width="260"/> |
 
-| Pre-configured Servers List | Custom DNS Manager |
-| :---: | :---: |
-| <img src="docs/screenshots/05_server_list.png" width="320"/> | <img src="docs/screenshots/06_custom_dns.png" width="320"/> |
-
-| Session Disconnection Summary | System Notification Drawer |
-| :---: | :---: |
-| <img src="docs/screenshots/07_session_summary.png" width="320"/> | <img src="docs/screenshots/08_notification.png" width="320"/> |
+| Settings (Dark Mode) | Quick Action Notification | Settings (Light Mode) |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/07_settings_dark.png" width="260"/> | <img src="docs/screenshots/08_notification.png" width="260"/> | <img src="docs/screenshots/09_settings_light.png" width="260"/> |
 
 </div>
 
@@ -84,9 +83,9 @@ Most DNS changing applications on Google Play are cluttered with **intrusive ful
 
 ## Privacy & Security
 
-- **100% Ad-Free:** Zero advertisement SDKs, zero banners, and zero interstitial videos.
-- **Zero Telemetry:** No analytics, tracking tokens, or user data collection.
-- **Local Tunnel:** Uses Android's `VpnService` exclusively for routing UDP packets on port 53.
+- **100% Ad-Free:** Zero advertisement SDKs, zero popups.
+- **Zero Telemetry:** No tracking, telemetry, or user analytics.
+- **DNS-Only Routing:** Only domain lookup requests are routed through the designated DNS resolver.
 
 ### Permissions Used
 
@@ -94,35 +93,32 @@ Most DNS changing applications on Google Play are cluttered with **intrusive ful
 | :--- | :--- |
 | `BIND_VPN_SERVICE` | Required to create the local tunnel for redirecting DNS queries |
 | `FOREGROUND_SERVICE` | Keeps the DNS service alive reliably in the background |
-| `POST_NOTIFICATIONS` | Displays the connection status notification on Android 13+ |
-| `RECEIVE_BOOT_COMPLETED` | Allows optional automatic re-connection after device restart |
+| `POST_NOTIFICATIONS` | Displays connection status notification with disconnect button on Android 13+ |
+| `RECEIVE_BOOT_COMPLETED` | Allows optional automatic connection after device reboot |
 
 ---
 
-## Developer Guide
+## For Developers
 
-### Tech Stack
-
-- **Language:** Kotlin
-- **UI Framework:** Jetpack Compose with Material 3
-- **Design Language:** Custom Dark Neon & Glassmorphism theme
-- **Architecture:** Clean Architecture + MVVM + Kotlin Coroutines & StateFlow
-- **DNS Tunneling:** Android `VpnService` handling raw IP packets via `FileInputStream` and `FileOutputStream`
-- **Ping Engine:** Custom non-blocking UDP socket sending DNS query for `google.com`
-- **Storage:** Jetpack DataStore Preferences & Kotlinx Serialization
+### Technical Architecture
+- **Language:** Kotlin 2.0
+- **UI Framework:** Jetpack Compose + Apple iOS Human Interface Guidelines
+- **Architecture:** Clean Architecture + MVVM + StateFlow + Coroutines
+- **Networking:** Android `VpnService` + direct UDP socket ping benchmark
+- **Preferences:** Jetpack DataStore Preferences
 
 <div dir="ltr">
 
-| Spec | Value |
+| Specification | Value |
 | :--- | :--- |
 | Application ID | `com.afrouzi.dnsmaster` |
 | minSdk / targetSdk / compileSdk | 24 / 36 / 36 |
 | Kotlin / Compose Compiler | 2.0.21 |
-| Version | 1.0.0 (Build 1) |
+| Version | 1.1.0 |
 
 </div>
 
-### Build & Run Locally
+### Local Build & Installation
 
 ```bash
 # Clone the repository
@@ -136,31 +132,14 @@ cd android-dns-changer
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### Build Signed Release
-
-To build a signed release locally, create a `keystore.properties` in the project root:
-
-```properties
-storeFile=keystore/dnsmaster-release.jks
-storePassword=...
-keyAlias=dnsmaster
-keyPassword=...
-```
-
-Then run:
-
-```bash
-./gradlew assembleRelease bundleRelease
-```
-
 ---
 
 ## Download Latest Release
 
-- **GitHub Releases:** [Download Latest APK](https://github.com/mostafaafrouzi/android-dns-changer/releases/latest)
+- **GitHub Releases:** [Download APK from GitHub Releases](https://github.com/mostafaafrouzi/android-dns-changer/releases/latest)
 
 ---
 
 ## License
 
-This project is open-source software licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).

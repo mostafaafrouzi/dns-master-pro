@@ -7,6 +7,7 @@ import java.io.FileOutputStream
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
+import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -29,6 +30,26 @@ class DnsPacketForwarder(
     private var upstreamSocket: DatagramSocket? = null
     private val pendingQueries = ConcurrentHashMap<Int, ClientSession>()
 
+    private val primaryAddress: InetAddress? by lazy {
+        try {
+            InetAddress.getByName(primaryDnsIp.trim())
+        } catch (e: Exception) {
+            Log.e(TAG, "Invalid primary DNS: $primaryDnsIp", e)
+            null
+        }
+    }
+
+    private val secondaryAddress: InetAddress? by lazy {
+        if (secondaryDnsIp.isNotBlank()) {
+            try {
+                InetAddress.getByName(secondaryDnsIp.trim())
+            } catch (e: Exception) {
+                Log.e(TAG, "Invalid secondary DNS: $secondaryDnsIp", e)
+                null
+            }
+        } else null
+    }
+
     private data class ClientSession(
         val clientIp: ByteArray,
         val clientPort: Int,
@@ -38,10 +59,13 @@ class DnsPacketForwarder(
     )
 
     fun stop() {
+        Log.i(TAG, "Stopping DnsPacketForwarder")
         isRunning.set(false)
         try {
             upstreamSocket?.close()
-        } catch (ignored: Exception) {}
+        } catch (e: Exception) {
+            Log.e(TAG, "Error closing upstream socket", e)
+        }
     }
 
     override fun run() {
@@ -49,12 +73,13 @@ class DnsPacketForwarder(
 
         try {
             val socket = DatagramSocket()
-            vpnService.protect(socket)
-            socket.soTimeout = 2000
+            if (!vpnService.protect(socket)) {
+                Log.e(TAG, "Failed to protect DatagramSocket")
+            }
+            socket.soTimeout = 3000
             upstreamSocket = socket
 
-            // Thread for receiving upstream responses
-            val receiverThread = Thread {
+            val receiverThread = Thread({
                 val recvBuffer = ByteArray(BUFFER_SIZE)
                 while (isRunning.get()) {
                     try {
@@ -62,20 +87,21 @@ class DnsPacketForwarder(
                         socket.receive(packet)
                         if (packet.length < 12) continue
 
-                        // DNS Transaction ID is first 2 bytes of DNS payload
                         val id = ((recvBuffer[0].toInt() and 0xFF) shl 8) or (recvBuffer[1].toInt() and 0xFF)
                         val session = pendingQueries.remove(id) ?: continue
 
                         val dnsPayload = recvBuffer.copyOf(packet.length)
                         sendTunResponse(session, dnsPayload)
+                    } catch (e: SocketTimeoutException) {
+                        continue
                     } catch (e: Exception) {
-                        if (!isRunning.get()) break
+                        if (!isRunning.get() || socket.isClosed) break
+                        Log.e(TAG, "Receiver thread error", e)
                     }
                 }
-            }
+            }, "DnsReceiverThread")
             receiverThread.start()
 
-            // Read from TUN interface
             val packetBuffer = ByteArray(BUFFER_SIZE)
             while (isRunning.get()) {
                 val length = try {
@@ -87,66 +113,59 @@ class DnsPacketForwarder(
 
                 handleTunPacket(packetBuffer, length, socket)
             }
-
             receiverThread.interrupt()
         } catch (e: Exception) {
-            Log.e(TAG, "Forwarder loop terminated", e)
+            Log.e(TAG, "Forwarder loop fatal error", e)
+        } finally {
+            Log.i(TAG, "DnsPacketForwarder shutting down")
+            try {
+                upstreamSocket?.close()
+            } catch (e: Exception) {}
         }
     }
 
     private fun handleTunPacket(buffer: ByteArray, length: Int, socket: DatagramSocket) {
-        if (length < 28) return // Minimum IPv4 (20) + UDP (8)
+        if (length < 28) return
 
         val version = (buffer[0].toInt() shr 4) and 0x0F
-        if (version != 4) return // Only IPv4 currently
+        if (version != 4) return
 
         val protocol = buffer[9].toInt() and 0xFF
         if (protocol != UDP_PROTOCOL) return
 
         val ipHeaderLength = (buffer[0].toInt() and 0x0F) * 4
-        if (length < ipHeaderLength + 8) return
+        val destPort = ((buffer[ipHeaderLength + 2].toInt() and 0xFF) shl 8) or (buffer[ipHeaderLength + 3].toInt() and 0xFF)
+        if (destPort != 53) return
 
-        val destPort = ((buffer[ipHeaderLength + 2].toInt() and 0xFF) shl 8) or
-                (buffer[ipHeaderLength + 3].toInt() and 0xFF)
-
-        if (destPort != 53) return // Only intercept DNS queries
-
-        val srcPort = ((buffer[ipHeaderLength].toInt() and 0xFF) shl 8) or
-                (buffer[ipHeaderLength + 1].toInt() and 0xFF)
-
-        val srcIp = ByteArray(4) { i -> buffer[12 + i] }
-        val dstIp = ByteArray(4) { i -> buffer[16 + i] }
-
+        val srcPort = ((buffer[ipHeaderLength].toInt() and 0xFF) shl 8) or (buffer[ipHeaderLength + 1].toInt() and 0xFF)
+        val srcIp = buffer.copyOfRange(12, 16)
+        val dstIp = buffer.copyOfRange(16, 20)
         val dnsPayloadOffset = ipHeaderLength + 8
-        val dnsPayloadLength = length - dnsPayloadOffset
-        if (dnsPayloadLength < 12) return
-
-        val dnsTransactionId = ((buffer[dnsPayloadOffset].toInt() and 0xFF) shl 8) or
-                (buffer[dnsPayloadOffset + 1].toInt() and 0xFF)
-
-        pendingQueries[dnsTransactionId] = ClientSession(
-            clientIp = srcIp,
-            clientPort = srcPort,
-            serverIp = dstIp,
-            serverPort = destPort
-        )
-
-        // Clean up queries older than 10 seconds
-        val now = System.currentTimeMillis()
-        pendingQueries.entries.removeIf { now - it.value.timestamp > 10000 }
-
         val dnsPayload = buffer.copyOfRange(dnsPayloadOffset, length)
-        try {
-            val targetIp = InetAddress.getByName(primaryDnsIp)
-            val outPacket = DatagramPacket(dnsPayload, dnsPayload.size, targetIp, 53)
-            socket.send(outPacket)
-        } catch (e: Exception) {
-            if (secondaryDnsIp.isNotBlank()) {
-                try {
-                    val fallbackIp = InetAddress.getByName(secondaryDnsIp)
-                    val outPacket = DatagramPacket(dnsPayload, dnsPayload.size, fallbackIp, 53)
-                    socket.send(outPacket)
-                } catch (ignored: Exception) {}
+        if (dnsPayload.size < 12) return
+
+        val dnsTransactionId = ((dnsPayload[0].toInt() and 0xFF) shl 8) or (dnsPayload[1].toInt() and 0xFF)
+
+        pendingQueries[dnsTransactionId] = ClientSession(srcIp, srcPort, dstIp, destPort)
+
+        // Clean queries older than 8 seconds
+        val now = System.currentTimeMillis()
+        pendingQueries.entries.removeIf { now - it.value.timestamp > 8000 }
+
+        val target = primaryAddress
+        if (target != null) {
+            try {
+                socket.send(DatagramPacket(dnsPayload, dnsPayload.size, target, 53))
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to forward DNS query to primary, trying secondary", e)
+                val fallback = secondaryAddress
+                if (fallback != null) {
+                    try {
+                        socket.send(DatagramPacket(dnsPayload, dnsPayload.size, fallback, 53))
+                    } catch (e2: Exception) {
+                        Log.e(TAG, "Failed to forward DNS query to secondary", e2)
+                    }
+                }
             }
         }
     }
@@ -158,28 +177,29 @@ class DnsPacketForwarder(
         val packet = ByteBuffer.allocate(totalLength)
 
         // 1. IPv4 Header
-        packet.put(0x45.toByte()) // Version 4, IHL 5
-        packet.put(0x00.toByte()) // Type of service
-        packet.putShort(totalLength.toShort()) // Total length
-        packet.putShort(0.toShort()) // Identification
-        packet.putShort(0x4000.toShort()) // Flags: Don't Fragment
+        packet.put(0x45.toByte())
+        packet.put(0x00.toByte())
+        packet.putShort(totalLength.toShort())
+        packet.putShort(0.toShort())
+        packet.putShort(0x4000.toShort()) // DF flag
         packet.put(64.toByte()) // TTL
-        packet.put(UDP_PROTOCOL.toByte()) // Protocol UDP (17)
-        packet.putShort(0.toShort()) // Checksum placeholder
-        packet.put(session.serverIp) // Source IP (virtual DNS IP)
-        packet.put(session.clientIp) // Destination IP (client 10.0.0.2)
+        packet.put(UDP_PROTOCOL.toByte())
+        packet.putShort(0.toShort()) // checksum placeholder
+        packet.put(session.serverIp) // source IP (virtual DNS IP)
+        packet.put(session.clientIp) // destination IP (client)
 
-        // Compute IP Header Checksum
         val ipChecksum = computeIpChecksum(packet.array(), 0, ipHeaderLength)
         packet.putShort(10, ipChecksum.toShort())
 
         // 2. UDP Header
-        packet.putShort(session.serverPort.toShort()) // Source Port (53)
-        packet.putShort(session.clientPort.toShort()) // Dest Port
-        packet.putShort((udpHeaderLength + dnsPayload.size).toShort()) // Length
-        packet.putShort(0.toShort()) // UDP Checksum (0 is allowed in IPv4 UDP)
+        val udpStart = ipHeaderLength
+        packet.putShort(udpStart, session.serverPort.toShort())
+        packet.putShort(udpStart + 2, session.clientPort.toShort())
+        packet.putShort(udpStart + 4, (udpHeaderLength + dnsPayload.size).toShort())
+        packet.putShort(udpStart + 6, 0.toShort()) // UDP checksum 0 is valid in IPv4
 
         // 3. DNS Payload
+        packet.position(udpStart + udpHeaderLength)
         packet.put(dnsPayload)
 
         synchronized(vpnOutput) {
@@ -187,7 +207,9 @@ class DnsPacketForwarder(
                 vpnOutput.write(packet.array(), 0, totalLength)
                 vpnOutput.flush()
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to write packet to TUN", e)
+                if (isRunning.get()) {
+                    Log.e(TAG, "Error writing DNS response to TUN", e)
+                }
             }
         }
     }

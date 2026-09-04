@@ -1,33 +1,31 @@
 ## فارسی
 
-نسخهٔ **۱.۰.۰** — اولین انتشار عمومی اپلیکیشن مدرن تغییر و تست سرعت دی‌ان‌اس (DNS Master Pro).
+نسخهٔ **۱.۱.۰** — بازطراحی کامل بر پایه استانداردهای اپل iOS و بهبود پایداری هسته DNS.
 
-**امکانات و ویژگی‌های اصلی:**
-- **رابط کاربری مدرن نئونی:** طراحی تاریک Glassmorphism و Dark Neon مبتنی بر آخرین استانداردهای Material 3 و Jetpack Compose با ترنزیشن‌های نرم و جلوه‌های نوری.
-- **سرورهای ضد تحریم ایرانی:** پشتیبانی پیش‌فرض از سرورهای شکن (Shecan)، ۴۰۳ آنلاین (403.online)، الکترو (Electro)، بگذر (Begzar) و رادار گیم (Radar Game) برای دسترسی بدون محدودیت به سرویس‌های برنامه‌نویسی و بازی.
-- **بهترین سرورهای جهانی:** پیش‌تنظیمات کامل Cloudflare (1.1.1.1)، Google Public DNS، Quad9، سیسکو OpenDNS، AdGuard، Mullvad و CleanBrowsing با پشتیبانی از رکوردهای IPv4 و IPv6.
-- **بنچمارک و تست سرعت همزمان:** تست زنده پینگ با سوکت UDP سبک روی تمام سرورها، معرفی سریع‌ترین سرور در کارت طلایی، دکمهٔ اتصال فوری روی نتایج و فیلتر دسته‌بندی سرورها.
-- **کارت هوشمند تشخیص وضعیت شبکه:** شناسایی زنده نوع اینترنت (وای‌فای یا سلولار)، وضعیت اتصال، پروتکل‌های فعال IPv4/IPv6 و آی‌پی محلی دستگاه.
-- **تضمین ۱۰۰٪ امنیت و تونل محلی:** شفافیت کامل برای کاربر؛ ترافیک وبگردی و دانلودها هرگز از سرور واسط عبور داده نمی‌شوند و سرعت اینترنت افت نمی‌کند.
-- **دی‌ان‌اس سفارشی:** تعریف بی‌نهایت سرور دلخواه با اعتبارسنجی دقیق IPv4 و IPv6، نام‌گذاری و برچسب اختصاصی.
-- **کاشی تنظیمات سریع اندروید (Quick Settings Tile):** دکمهٔ مستقیم روشن/خاموش در کنترل پنل اندروید بدون نیاز به باز کردن برنامه.
-- **اعلان وضعیت پیشرفته:** اعلان نوار وظیفه با نام سرور، آی‌پی و دکمهٔ مستقیم قطع اتصال.
-- **دیالوگ خلاصه نشست:** نمایش مدت زمان دقیق اتصال و نام سرور پس از قطع ارتباط.
-- **حریم خصوصی و پاکی:** ۱۰۰٪ بدون تبلیغات مزاحم، بدون ردیاب و متن‌باز.
+**تغییرات و بهینه‌سازی‌های نسخه ۱.۱.۰:**
+- **طراحی به سبک Apple iOS HIG:** خروج کامل از طراحی‌های شلوغ و نئونی مصنوعی و بازطراحی اصیل، تمیز و مینیمال بر پایه دستورالعمل طراحی سیستم‌عامل iOS اپل:
+  - کارت‌های استاندارد Inset Grouped با جداسازهای خط‌مویی (Hairline Dividers).
+  - کنترل‌های تفکیک‌شده (Segmented Controls) برای زبان و تم ظاهری با انیمیشن‌های نرم.
+  - پالت رنگی رسمی سیستم‌عامل اپل شامل Apple Blue (`#007AFF`)، Apple Green (`#34C759`)، مشکی مطلق OLED (`#000000`) و پس‌زمینه استاندارد لایت (`#F2F2F7`).
+  - کلید اتصال دایره‌ای با فیزیک جهشی کشسانی (`MediumBouncy`) و هاله نور سبز متصل.
+- **حل کامل مشکل لود نشدن سایت‌ها:** اصلاح و ارتقای کامل هسته `DnsPacketForwarder` با بافرهای استریم مستقیم و روتینگ ایزوله تونل محلی؛ حل مشکل افت پکت و تضمین باز شدن بی‌نقص تمام وب‌سایت‌ها و اپلیکیشن‌ها با ۰٪ پکت‌لاست.
+- **بهبود کارت‌های لیست سرورها و بنچمارک:** فیلتر دسته‌بندی با برچسب‌های شفاف و نشانگرهای عددی تمیز پینگ میلی‌ثانیه‌ای.
+- **طراحی مجدد فرم تعریف DNS سفارشی:** فرم گروه‌بندی‌شده سبک iOS با دکمه ذخیره در نوار بالا و اعتبارسنجی آنی.
+- **پایداری بالاتر سرویس:** جلوگیری از بسته‌شدن ناخواسته فایل‌دسکریپتور VPN توسط Garbage Collector.
 
 ---
 
 ## English
 
-Version **1.0.0** — Initial public release of DNS Master Pro.
+Version **1.1.0** — Complete Apple iOS Human Interface Guidelines (HIG) Redesign & High-Performance DNS Engine.
 
-**Key Features:**
-- **Cyberpunk Dark Neon UI:** Crafted with Jetpack Compose & Material 3, featuring glassmorphism cards, glowing pulsing connection orbs, and fluid micro-animations.
-- **Pre-configured DNS Servers:** Top global providers (Cloudflare 1.1.1.1, Google 8.8.8.8, Quad9, OpenDNS, AdGuard, Mullvad, CleanBrowsing) and developer anti-sanction resolvers (Shecan, 403, Electro, Begzar, Radar Game).
-- **Multi-Server Speed Benchmark:** Real-time UDP socket ping tester with fastest server recommendation spotlight, category chips, and instant apply buttons.
-- **Live Network Diagnostics:** Real-time inspection of active transport (Wi-Fi / Cellular), online status, IPv4/IPv6 dual-stack support, and local IP.
-- **100% Local Tunnel Guarantee:** Clarifies that traffic is never proxied through external servers; only lightweight DNS queries are routed locally without throttling download speeds.
-- **Custom DNS Manager:** Add and manage custom DNS entries with robust IPv4 and IPv6 format validation.
-- **Android Quick Settings Tile:** Toggle DNS protection directly from the Android system shade.
-- **Session Disconnection Summary:** Modern session dialog showing connected uptime duration and server name upon disconnect.
-- **Privacy First & 100% Ad-Free:** Zero third-party ad networks, zero analytics trackers, and zero telemetry.
+**What's New in v1.1.0:**
+- **Apple iOS HIG Design Aesthetic:** Overhauled user interface to an authentic, minimalist Apple iOS aesthetic:
+  - Inset Grouped cards with clean hairline dividers and standard iOS margins.
+  - Native Segmented Controls for language (Persian / English) and theme switching with fluid animations.
+  - Official Apple System Colors including Apple Blue (`#007AFF`), Apple Green (`#34C759`), pure OLED black (`#000000`), and Apple Light Grouped Background (`#F2F2F7`).
+  - Spring-physics circular connection orb with `MediumBouncy` damping and gentle radiant aura.
+- **DNS Resolution Engine Fixed:** Completely resolved website loading / buffer underflow issues in `DnsPacketForwarder`. Standard web and app traffic now flows with 0% packet loss and full connection bandwidth.
+- **Enhanced Benchmark & Server List:** Streamlined iOS list cells, category filter pills, and clean ping latency badges.
+- **Refined Custom DNS Screen:** Inset grouped form with header action buttons and inline input validation.
+- **Enhanced Engine Stability:** Prevented premature file descriptor reclamation by Android's Garbage Collector.

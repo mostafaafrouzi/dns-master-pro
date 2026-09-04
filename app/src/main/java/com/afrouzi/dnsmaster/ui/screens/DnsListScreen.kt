@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,7 +33,7 @@ import com.afrouzi.dnsmaster.model.DnsCategory
 import com.afrouzi.dnsmaster.model.DnsItem
 import com.afrouzi.dnsmaster.model.VpnConnectionState
 import com.afrouzi.dnsmaster.service.DnsVpnService
-import com.afrouzi.dnsmaster.theme.NeonCyan
+import com.afrouzi.dnsmaster.theme.*
 import com.afrouzi.dnsmaster.ui.components.DnsCard
 import kotlinx.coroutines.launch
 
@@ -81,11 +82,12 @@ fun DnsListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToAddCustom,
-                containerColor = NeonCyan,
-                contentColor = Color.Black,
-                shape = CircleShape
+                containerColor = AppleBlue,
+                contentColor = Color.White,
+                shape = CircleShape,
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Custom DNS")
+                Icon(Icons.Default.Add, contentDescription = "Add Custom DNS", modifier = Modifier.size(24.dp))
             }
         }
     ) { paddingValues ->
@@ -95,68 +97,74 @@ fun DnsListScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Search Bar
-            OutlinedTextField(
+            // iOS Native Search Bar
+            TextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
                         text = if (isPersian) "جستجوی سرور یا آی‌پی..." else "Search DNS name or IP...",
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.size(18.dp)
                     )
                 },
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        IconButton(onClick = { searchQuery = "" }, modifier = Modifier.size(24.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = NeonCyan,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                shape = RoundedCornerShape(10.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Category Filter Chips
+            // Category Filter Pills
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(DnsCategory.values()) { category ->
                     val isSelected = selectedCategory == category
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { selectedCategory = category },
-                        label = {
-                            Text(
-                                text = if (isPersian) category.titleFa else category.titleEn,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 12.sp
-                            )
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = NeonCyan.copy(alpha = 0.2f),
-                            selectedLabelColor = NeonCyan
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.clickable { selectedCategory = category }
+                    ) {
+                        Text(
+                            text = if (isPersian) category.titleFa else category.titleEn,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
                         )
-                    )
+                    }
                 }
             }
 

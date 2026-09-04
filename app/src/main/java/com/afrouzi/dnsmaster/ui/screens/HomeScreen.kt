@@ -48,7 +48,7 @@ import com.afrouzi.dnsmaster.model.DnsItem
 import com.afrouzi.dnsmaster.model.VpnConnectionState
 import com.afrouzi.dnsmaster.service.DnsVpnService
 import com.afrouzi.dnsmaster.theme.*
-import com.afrouzi.dnsmaster.ui.components.ConnectionOrb
+import com.afrouzi.dnsmaster.ui.components.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -181,49 +181,49 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // Active DNS Card
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-                .clickable { onNavigateToServers() }
+        // Active DNS Card (iOS Inset Grouped Style)
+        IosGroupedCard(
+            cornerRadius = 18.dp,
+            modifier = Modifier.clickable { onNavigateToServers() }
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(modifier = Modifier.padding(18.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(NeonCyan.copy(alpha = 0.15f)),
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(AppleBlue),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Dns,
                                 contentDescription = null,
-                                tint = NeonCyan,
-                                modifier = Modifier.size(22.dp)
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(14.dp))
 
                         Column {
                             Text(
                                 text = if (isPersian) "سرور انتخابی" else "Selected Server",
-                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(1.dp))
                             Text(
                                 text = currentDns.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -232,15 +232,19 @@ fun HomeScreen(
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = "Select",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                )
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // IPs and Metrics Grid
+                // IPs and Metrics Grid (iOS Clean Metrics)
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
@@ -249,41 +253,47 @@ fun HomeScreen(
                         Text(
                             text = if (isPersian) "آی‌پی اصلی" else "Primary IP",
                             fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = currentDns.primaryIp,
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    Column {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = if (isPersian) "مدت اتصال" else "Uptime",
                             fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = uptimeString,
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (connectionState == VpnConnectionState.CONNECTED) NeonEmerald else MaterialTheme.colorScheme.onSurfaceVariant
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (connectionState == VpnConnectionState.CONNECTED) AppleGreen else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    Column {
+                    Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = if (isPersian) "پینگ زنده" else "Live Ping",
                             fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = NetworkUtils.formatPing(livePing),
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (livePing != null) PingGreat else MaterialTheme.colorScheme.onSurfaceVariant
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (livePing != null) AppleGreen else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -300,44 +310,47 @@ fun HomeScreen(
         ) {
             Text(
                 text = if (isPersian) "سوییچ سریع دی‌ان‌اس" else "Quick Switch",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            TextButton(onClick = onNavigateToSpeedTest) {
+            TextButton(
+                onClick = onNavigateToSpeedTest,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            ) {
                 Icon(
                     imageVector = Icons.Default.Speed,
                     contentDescription = null,
-                    tint = NeonCyan,
-                    modifier = Modifier.size(18.dp)
+                    tint = AppleBlue,
+                    modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = if (isPersian) "تست سرعت" else "Speed Test",
-                    color = NeonCyan,
-                    fontWeight = FontWeight.Bold,
+                    color = AppleBlue,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         val quickList = remember(allServers) {
             allServers.filter { it.isFavorite }.take(6)
         }
 
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             items(quickList, key = { it.id }) { item ->
                 val isCurrent = item.id == currentDns.id
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (isCurrent) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                    border = borderOrNull(isCurrent, NeonCyan),
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isCurrent) AppleBlue.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface,
+                    border = borderOrNull(isCurrent, AppleBlue),
                     modifier = Modifier.clickable {
                         coroutineScope.launch {
                             repository.setSelectedDnsId(item.id)
@@ -354,13 +367,13 @@ fun HomeScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)
                     ) {
                         Text(
                             text = item.name,
                             fontSize = 13.sp,
-                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isCurrent) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Medium,
+                            color = if (isCurrent) AppleBlue else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -369,14 +382,8 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Network Diagnostics Card (Inspired by competitor)
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f), RoundedCornerShape(20.dp))
-        ) {
+        // Network Diagnostics Card (iOS Inset Grouped Style)
+        IosGroupedCard(cornerRadius = 18.dp) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -389,40 +396,61 @@ fun HomeScreen(
                             NetworkTransport.CELLULAR -> Icons.Default.SignalCellularAlt
                             else -> Icons.Default.Lan
                         }
-                        Icon(
-                            imageVector = transportIcon,
-                            contentDescription = null,
-                            tint = NeonCyan,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(AppleGreen),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = transportIcon,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = if (isPersian) "تشخیص وضعیت شبکه" else "Network Diagnostics",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
                     if (networkInfo.isInternetValidated) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = NeonEmerald.copy(alpha = 0.15f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, NeonEmerald.copy(alpha = 0.4f))
+                            shape = RoundedCornerShape(12.dp),
+                            color = AppleGreen.copy(alpha = 0.12f)
                         ) {
-                            Text(
-                                text = if (isPersian) "آنلاین" else "Online",
-                                color = NeonEmerald,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(AppleGreen)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (isPersian) "آنلاین" else "Online",
+                                    color = AppleGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                )
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Row(
@@ -433,8 +461,10 @@ fun HomeScreen(
                         Text(
                             text = if (isPersian) "نوع اتصال" else "Connection Type",
                             fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = if (isPersian) networkInfo.transportNameFa else networkInfo.transportNameEn,
                             fontSize = 13.sp,
@@ -447,30 +477,32 @@ fun HomeScreen(
                         Text(
                             text = if (isPersian) "پروتکل‌های فعال" else "Supported Protocols",
                             fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                             Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = if (networkInfo.hasIpv4) NeonCyan.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (networkInfo.hasIpv4) AppleBlue.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
                             ) {
                                 Text(
                                     text = "IPv4",
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (networkInfo.hasIpv4) NeonCyan else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (networkInfo.hasIpv4) AppleBlue else MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
                             Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = if (networkInfo.hasIpv6) NeonCyan.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (networkInfo.hasIpv6) AppleBlue.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
                             ) {
                                 Text(
                                     text = "IPv6",
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (networkInfo.hasIpv6) NeonCyan else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (networkInfo.hasIpv6) AppleBlue else MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
@@ -479,10 +511,10 @@ fun HomeScreen(
                 }
 
                 if (networkInfo.localIpAddress != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "${if (isPersian) "آی‌پی محلی: " else "Local IP: "}${networkInfo.localIpAddress}",
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -491,30 +523,24 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Local Tunnel Guarantee Card (Inspired by competitor)
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
-        ) {
+        // Local Tunnel Guarantee Card (iOS Inset Grouped Style)
+        IosGroupedCard(cornerRadius = 18.dp) {
             Row(
                 verticalAlignment = Alignment.Top,
                 modifier = Modifier.padding(16.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(NeonCyan.copy(alpha = 0.15f)),
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(AppleIndigo),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = null,
-                        tint = NeonCyan,
-                        modifier = Modifier.size(20.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
@@ -523,8 +549,8 @@ fun HomeScreen(
                 Column {
                     Text(
                         text = if (isPersian) "تضمین ۱۰۰٪ امنیت و تونل محلی" else "100% Local Tunnel Guarantee",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -533,9 +559,9 @@ fun HomeScreen(
                             "این اپلیکیشن ترافیک شخصی، دانلودها و وبگردی شما را از سرور واسط عبور نمی‌دهد. تنها کوئری‌های DNS به صورت کاملاً ایمن و محلی تغییر می‌یابند."
                         else
                             "DNS Master operates as a local resolver. Your downloads, browsing, and personal data are NEVER proxied through remote servers.",
-                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
+                        lineHeight = 17.sp
                     )
                 }
             }
@@ -544,21 +570,30 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(16.dp))
     }
 
-    // Session Summary Dialog (Inspired by competitor)
+    // Session Summary Dialog (iOS Modal Action Sheet Style)
     if (showDisconnectionDialog) {
         AlertDialog(
             onDismissRequest = { showDisconnectionDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = NeonAmber,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(AppleGreen.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = AppleGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = if (isPersian) "پایان نشست اتصال" else "Session Disconnected",
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -567,9 +602,13 @@ fun HomeScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = if (isPersian) "ارتباط با سرور دی‌ان‌اس با موفقیت قطع شد." else "Successfully disconnected from DNS server.",
-                        style = MaterialTheme.typography.bodyMedium
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    HorizontalDivider(
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                    )
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
@@ -581,7 +620,7 @@ fun HomeScreen(
                         )
                         Text(
                             text = lastSessionServerName,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp
                         )
                     }
@@ -596,8 +635,8 @@ fun HomeScreen(
                         )
                         Text(
                             text = lastSessionDuration,
-                            fontWeight = FontWeight.Bold,
-                            color = NeonCyan,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppleGreen,
                             fontSize = 13.sp
                         )
                     }
@@ -606,13 +645,14 @@ fun HomeScreen(
             confirmButton = {
                 Button(
                     onClick = { showDisconnectionDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black),
-                    shape = RoundedCornerShape(10.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = if (isPersian) "متوجه شدم" else "Got It", fontWeight = FontWeight.Bold)
+                    Text(text = if (isPersian) "متوجه شدم" else "Got It", fontWeight = FontWeight.SemiBold)
                 }
             },
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(22.dp),
             containerColor = MaterialTheme.colorScheme.surface
         )
     }

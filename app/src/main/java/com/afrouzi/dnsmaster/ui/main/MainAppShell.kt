@@ -21,8 +21,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.afrouzi.dnsmaster.data.repository.DnsRepository
-import com.afrouzi.dnsmaster.theme.DnsMasterTheme
-import com.afrouzi.dnsmaster.theme.NeonCyan
+import com.afrouzi.dnsmaster.theme.*
 import com.afrouzi.dnsmaster.ui.screens.*
 
 enum class AppTab {
@@ -62,81 +61,85 @@ fun MainAppShell() {
             Scaffold(
                 bottomBar = {
                     if (currentTab != AppTab.CUSTOM_DNS) {
-                        NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            tonalElevation = 8.dp
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            NavigationBarItem(
-                                selected = currentTab == AppTab.HOME,
-                                onClick = { currentTab = AppTab.HOME },
-                                icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                                label = {
-                                    Text(
-                                        text = if (isPersian) "خانه" else "Home",
-                                        fontSize = 12.sp,
-                                        fontWeight = if (currentTab == AppTab.HOME) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = Color.Black,
-                                    selectedTextColor = NeonCyan,
-                                    indicatorColor = NeonCyan
+                            Column {
+                                HorizontalDivider(
+                                    thickness = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
                                 )
-                            )
+                                NavigationBar(
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    tonalElevation = 0.dp,
+                                    modifier = Modifier.height(62.dp)
+                                ) {
+                                    val itemColors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = AppleBlue,
+                                        selectedTextColor = AppleBlue,
+                                        unselectedIconColor = AppleGray,
+                                        unselectedTextColor = AppleGray,
+                                        indicatorColor = Color.Transparent
+                                    )
 
-                            NavigationBarItem(
-                                selected = currentTab == AppTab.SERVERS,
-                                onClick = { currentTab = AppTab.SERVERS },
-                                icon = { Icon(Icons.Default.Dns, contentDescription = "Servers") },
-                                label = {
-                                    Text(
-                                        text = if (isPersian) "سرورها" else "Servers",
-                                        fontSize = 12.sp,
-                                        fontWeight = if (currentTab == AppTab.SERVERS) FontWeight.Bold else FontWeight.Normal
+                                    NavigationBarItem(
+                                        selected = currentTab == AppTab.HOME,
+                                        onClick = { currentTab = AppTab.HOME },
+                                        icon = { Icon(Icons.Default.Home, contentDescription = "Home", modifier = Modifier.size(23.dp)) },
+                                        label = {
+                                            Text(
+                                                text = if (isPersian) "خانه" else "Home",
+                                                fontSize = 11.sp,
+                                                fontWeight = if (currentTab == AppTab.HOME) FontWeight.SemiBold else FontWeight.Medium
+                                            )
+                                        },
+                                        colors = itemColors
                                     )
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = Color.Black,
-                                    selectedTextColor = NeonCyan,
-                                    indicatorColor = NeonCyan
-                                )
-                            )
 
-                            NavigationBarItem(
-                                selected = currentTab == AppTab.SPEED_TEST,
-                                onClick = { currentTab = AppTab.SPEED_TEST },
-                                icon = { Icon(Icons.Default.Speed, contentDescription = "Speed Test") },
-                                label = {
-                                    Text(
-                                        text = if (isPersian) "تست سرعت" else "Speed Test",
-                                        fontSize = 12.sp,
-                                        fontWeight = if (currentTab == AppTab.SPEED_TEST) FontWeight.Bold else FontWeight.Normal
+                                    NavigationBarItem(
+                                        selected = currentTab == AppTab.SERVERS,
+                                        onClick = { currentTab = AppTab.SERVERS },
+                                        icon = { Icon(Icons.Default.Dns, contentDescription = "Servers", modifier = Modifier.size(23.dp)) },
+                                        label = {
+                                            Text(
+                                                text = if (isPersian) "سرورها" else "Servers",
+                                                fontSize = 11.sp,
+                                                fontWeight = if (currentTab == AppTab.SERVERS) FontWeight.SemiBold else FontWeight.Medium
+                                            )
+                                        },
+                                        colors = itemColors
                                     )
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = Color.Black,
-                                    selectedTextColor = NeonCyan,
-                                    indicatorColor = NeonCyan
-                                )
-                            )
 
-                            NavigationBarItem(
-                                selected = currentTab == AppTab.SETTINGS,
-                                onClick = { currentTab = AppTab.SETTINGS },
-                                icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                                label = {
-                                    Text(
-                                        text = if (isPersian) "تنظیمات" else "Settings",
-                                        fontSize = 12.sp,
-                                        fontWeight = if (currentTab == AppTab.SETTINGS) FontWeight.Bold else FontWeight.Normal
+                                    NavigationBarItem(
+                                        selected = currentTab == AppTab.SPEED_TEST,
+                                        onClick = { currentTab = AppTab.SPEED_TEST },
+                                        icon = { Icon(Icons.Default.Speed, contentDescription = "Speed Test", modifier = Modifier.size(23.dp)) },
+                                        label = {
+                                            Text(
+                                                text = if (isPersian) "تست سرعت" else "Speed Test",
+                                                fontSize = 11.sp,
+                                                fontWeight = if (currentTab == AppTab.SPEED_TEST) FontWeight.SemiBold else FontWeight.Medium
+                                            )
+                                        },
+                                        colors = itemColors
                                     )
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = Color.Black,
-                                    selectedTextColor = NeonCyan,
-                                    indicatorColor = NeonCyan
-                                )
-                            )
+
+                                    NavigationBarItem(
+                                        selected = currentTab == AppTab.SETTINGS,
+                                        onClick = { currentTab = AppTab.SETTINGS },
+                                        icon = { Icon(Icons.Default.Settings, contentDescription = "Settings", modifier = Modifier.size(23.dp)) },
+                                        label = {
+                                            Text(
+                                                text = if (isPersian) "تنظیمات" else "Settings",
+                                                fontSize = 11.sp,
+                                                fontWeight = if (currentTab == AppTab.SETTINGS) FontWeight.SemiBold else FontWeight.Medium
+                                            )
+                                        },
+                                        colors = itemColors
+                                    )
+                                }
+                            }
                         }
                     }
                 }

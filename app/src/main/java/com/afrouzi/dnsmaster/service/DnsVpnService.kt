@@ -28,10 +28,25 @@ class DnsVpnService : VpnService() {
         const val ACTION_UPDATE = "com.afrouzi.dnsmaster.ACTION_UPDATE"
         const val EXTRA_DNS_ID = "com.afrouzi.dnsmaster.EXTRA_DNS_ID"
 
-        const val VIRTUAL_DNS_IP = "10.0.0.2"
+        // RFC 5737 Test-Net address that will not collide with any local LAN/Wi-Fi router
+        const val TUN_INTERFACE_IP = "192.0.2.1"
+        const val TUN_PREFIX_LENGTH = 24
+        // Virtual DNS IP: inside the TUN /24 subnet so it is automatically routed
+        // through tun0 without needing explicit /32 host routes for external IPs.
+        const val VIRTUAL_DNS_IP = "192.0.2.53"
+    }
+
+    private fun isValidIpv4(ip: String): Boolean {
+        val parts = ip.split(".")
+        if (parts.size != 4) return false
+        return parts.all { part ->
+            part.toIntOrNull()?.let { it in 0..255 } == true
+        }
     }
 
     private var vpnInterface: ParcelFileDescriptor? = null
+    private var vpnInput: FileInputStream? = null
+    private var vpnOutput: FileOutputStream? = null
     private var packetForwarder: DnsPacketForwarder? = null
     private var forwarderThread: Thread? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO)
@@ -45,27 +60,23 @@ class DnsVpnService : VpnService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_STOP -> {
-                stopVpn()
-                return START_NOT_STICKY
+            ACTION_START -> {
+                val dnsId = intent.getStringExtra(EXTRA_DNS_ID)
+                serviceScope.launch { startVpn(dnsId) }
             }
-            ACTION_START, ACTION_UPDATE -> {
+            ACTION_STOP -> {
+                serviceScope.launch { stopVpn() }
+            }
+            ACTION_UPDATE -> {
                 val dnsId = intent.getStringExtra(EXTRA_DNS_ID)
                 serviceScope.launch {
-                    startVpn(dnsId)
+                    if (DnsRepository.connectionState.value == VpnConnectionState.CONNECTED) {
+                        startVpn(dnsId)
+                    }
                 }
-                return START_STICKY
-            }
-            else -> {
-                if (DnsRepository.connectionState.value == VpnConnectionState.CONNECTED) {
-                    return START_STICKY
-                }
-                serviceScope.launch {
-                    startVpn(null)
-                }
-                return START_STICKY
             }
         }
+        return START_STICKY
     }
 
     private suspend fun startVpn(specificDnsId: String?) {
@@ -97,15 +108,27 @@ class DnsVpnService : VpnService() {
                 startForeground(NotificationHelper.NOTIFICATION_ID, notification)
             }
 
-            // Stop any existing forwarder before creating new tunnel
             cleanupForwarder()
 
             val builder = Builder()
                 .setSession("DNS Master - ${dnsItem.name}")
                 .setMtu(1500)
-                .addAddress(VIRTUAL_DNS_IP, 32)
+                .addAddress(TUN_INTERFACE_IP, 32)
                 .addDnsServer(VIRTUAL_DNS_IP)
                 .addRoute(VIRTUAL_DNS_IP, 32)
+
+            // Disallow our own app so speed tests and internal sockets bypass the VPN
+            try {
+                builder.addDisallowedApplication(packageName)
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not disallow package $packageName", e)
+            }
+
+            builder.allowBypass()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                builder.setUnderlyingNetworks(null)
+            }
 
             vpnInterface = builder.establish()
 
@@ -116,19 +139,21 @@ class DnsVpnService : VpnService() {
                 return
             }
 
-            val vpnInput = FileInputStream(pfd.fileDescriptor)
-            val vpnOutput = FileOutputStream(pfd.fileDescriptor)
+            val inStream = FileInputStream(pfd.fileDescriptor)
+            val outStream = FileOutputStream(pfd.fileDescriptor)
+            vpnInput = inStream
+            vpnOutput = outStream
 
             val forwarder = DnsPacketForwarder(
                 vpnService = this,
-                vpnInput = vpnInput,
-                vpnOutput = vpnOutput,
-                primaryDnsIp = dnsItem.primaryIp,
-                secondaryDnsIp = dnsItem.secondaryIp
+                vpnInput = inStream,
+                vpnOutput = outStream,
+                primaryDnsIp = dnsItem.primaryIp.trim(),
+                secondaryDnsIp = dnsItem.secondaryIp.trim()
             )
             packetForwarder = forwarder
 
-            val thread = Thread(forwarder, "DnsVpnThread")
+            val thread = Thread(forwarder, "DnsForwarderThread")
             forwarderThread = thread
             thread.start()
 
@@ -150,7 +175,12 @@ class DnsVpnService : VpnService() {
             packetForwarder = null
             forwarderThread?.interrupt()
             forwarderThread = null
-            vpnInterface?.close()
+
+            try { vpnInput?.close() } catch (e: Exception) {}
+            vpnInput = null
+            try { vpnOutput?.close() } catch (e: Exception) {}
+            vpnOutput = null
+            try { vpnInterface?.close() } catch (e: Exception) {}
             vpnInterface = null
         } catch (e: Exception) {
             Log.e(TAG, "Error during cleanup", e)
