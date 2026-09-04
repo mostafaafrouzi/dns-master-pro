@@ -583,26 +583,32 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Quick Domain Chips
-                Row(
+                // Quick Domain Chips (Horizontally Scrollable)
+                val quickDomains = listOf(
+                    "google.com" to "Google",
+                    "docker.com" to (if (isPersian) "تحریم‌شکن (Docker)" else "Anti-Sanction"),
+                    "shecan.ir" to "Shecan",
+                    "wikipedia.org" to "Wikipedia",
+                    "cloudflare.com" to "Cloudflare",
+                    "github.com" to "GitHub"
+                )
+                LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    val quickDomains = listOf("google.com", "docker.com", "shecan.ir", "wikipedia.org")
-                    quickDomains.forEach { domain ->
+                    items(quickDomains) { (domain, label) ->
                         val isSelected = lookupDomain == domain
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = if (isSelected) AppleBlue.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                             modifier = Modifier.clickable { lookupDomain = domain }
                         ) {
                             Text(
-                                text = domain,
+                                text = label,
                                 fontSize = 11.sp,
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                             )
                         }
                     }

@@ -29,6 +29,11 @@ class DnsRepository(private val context: Context) {
         private val KEY_THEME = stringPreferencesKey("app_theme") // "system", "dark", "light"
         private val KEY_AUTO_CONNECT_BOOT = booleanPreferencesKey("auto_connect_boot")
 
+        fun getDefaultSystemLanguage(): String {
+            val lang = java.util.Locale.getDefault().language.lowercase()
+            return if (lang.startsWith("fa") || lang.startsWith("prs") || lang.startsWith("pes")) "fa" else "en"
+        }
+
         @Volatile
         private var INSTANCE: DnsRepository? = null
 
@@ -43,6 +48,7 @@ class DnsRepository(private val context: Context) {
         val connectedDns = MutableStateFlow<DnsItem?>(null)
         val connectedStartTime = MutableStateFlow(0L)
         val activePingMs = MutableStateFlow<Long?>(null)
+        val currentLanguage = MutableStateFlow(getDefaultSystemLanguage())
     }
 
     val selectedDnsIdFlow: Flow<String> = context.dataStore.data.map { prefs ->
@@ -63,7 +69,9 @@ class DnsRepository(private val context: Context) {
     }
 
     val languageFlow: Flow<String> = context.dataStore.data.map { prefs ->
-        prefs[KEY_LANGUAGE] ?: "fa"
+        val lang = prefs[KEY_LANGUAGE] ?: getDefaultSystemLanguage()
+        currentLanguage.value = lang
+        lang
     }
 
     val themeFlow: Flow<String> = context.dataStore.data.map { prefs ->
@@ -120,6 +128,7 @@ class DnsRepository(private val context: Context) {
     }
 
     suspend fun setLanguage(lang: String) {
+        currentLanguage.value = lang
         context.dataStore.edit { prefs ->
             prefs[KEY_LANGUAGE] = lang
         }

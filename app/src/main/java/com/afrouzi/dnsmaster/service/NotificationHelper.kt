@@ -11,7 +11,6 @@ import androidx.core.app.NotificationCompat
 import com.afrouzi.dnsmaster.MainActivity
 import com.afrouzi.dnsmaster.R
 import com.afrouzi.dnsmaster.model.DnsItem
-import com.afrouzi.dnsmaster.service.receiver.VpnActionReceiver
 
 object NotificationHelper {
 
@@ -21,7 +20,7 @@ object NotificationHelper {
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelName = "DNS Master Service"
-            val channelDescription = "Shows active DNS status and quick control buttons"
+            val channelDescription = "Shows active DNS status, duration and quick controls"
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(CHANNEL_ID, channelName, importance).apply {
                 description = channelDescription
@@ -32,7 +31,13 @@ object NotificationHelper {
         }
     }
 
-    fun buildVpnNotification(context: Context, dnsItem: DnsItem?, isPersian: Boolean = false): Notification {
+    fun buildVpnNotification(
+        context: Context,
+        dnsItem: DnsItem?,
+        isPersian: Boolean = false,
+        startTime: Long = 0L,
+        isConnected: Boolean = true
+    ): Notification {
         val appIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -56,14 +61,25 @@ object NotificationHelper {
             "10.0.0.2"
         }
 
-        val title = if (isPersian) "اتصال فعال: $dnsName" else "Connected: $dnsName"
-        val content = if (isPersian) "آدرس سرور: $ips" else "Server IP: $ips"
-        val disconnectLabel = if (isPersian) "قطع اتصال" else "Disconnect"
+        val title = if (isConnected) {
+            if (isPersian) "متصل به: $dnsName" else "Connected to: $dnsName"
+        } else {
+            if (isPersian) "در حال اتصال به: $dnsName" else "Connecting to: $dnsName"
+        }
 
-        return NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+        val content = if (isPersian) "آدرس سرور: $ips" else "Server IP: $ips"
+        val subText = if (isConnected) {
+            if (isPersian) "وضعیت: متصل" else "Status: Connected"
+        } else {
+            if (isPersian) "وضعیت: در حال برقراری" else "Status: Connecting"
+        }
+        val disconnectLabel = if (isPersian) "خاموش کردن" else "Disconnect"
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(content)
+            .setSubText(subText)
             .setContentIntent(appPendingIntent)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -73,6 +89,16 @@ object NotificationHelper {
                 disconnectLabel,
                 disconnectPendingIntent
             )
-            .build()
+
+        if (isConnected && startTime > 0) {
+            builder.setUsesChronometer(true)
+            builder.setWhen(startTime)
+            builder.setShowWhen(true)
+        } else {
+            builder.setUsesChronometer(false)
+            builder.setShowWhen(false)
+        }
+
+        return builder.build()
     }
 }

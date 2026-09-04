@@ -37,7 +37,7 @@ fun MainAppShell() {
     val context = LocalContext.current
     val repository = remember { DnsRepository.getInstance(context) }
 
-    val language by repository.languageFlow.collectAsState(initial = "fa")
+    val language by repository.languageFlow.collectAsState(initial = DnsRepository.currentLanguage.value)
     val themePreference by repository.themeFlow.collectAsState(initial = "dark")
 
     val isPersian = language == "fa"

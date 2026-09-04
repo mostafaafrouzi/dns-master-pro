@@ -40,7 +40,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val currentLanguage by repository.languageFlow.collectAsState(initial = "fa")
+    val currentLanguage by repository.languageFlow.collectAsState(initial = DnsRepository.currentLanguage.value)
     val currentTheme by repository.themeFlow.collectAsState(initial = "dark")
     val autoConnectBoot by repository.autoConnectBootFlow.collectAsState(initial = false)
 

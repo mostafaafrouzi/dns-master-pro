@@ -1,9 +1,26 @@
 ## فارسی
 
-### نسخهٔ ۱.۲.۱ (جدید)
-**اسکرول روان تمام‌صفحه در بخش‌های تست سرعت و اصلاح نمایش و خوانایی کامل فیلد جستجو.**
+### نسخهٔ ۱.۲.۲ (جدید)
+**کاشی تنظیمات سریع (Quick Settings Tile) هوشمند، اعلانات پیشرفته با کرونومتر زنده و دکمه قطع اتصال (مشابه v2rayNG)، تشخیص خودکار زبان سیستم و اسکرول افقی تراشه‌های تست دامنه.**
 
-**تغییرات و بهبودهای نسخه ۱.۲.۱:**
+**تغییرات و بهبودهای نسخه ۱.۲.۲:**
+- **کاشی تنظیمات سریع فوق‌العاده پایدار و هوشمند (Quick Settings Tile):**
+  - بازنویسی کامل معماری `DnsQuickTileService` با جریان‌های واکنشی (Reactive Flow) و آپدیت لحظه‌ای ظاهر کاشی متناسب با اتصال و قطع شدن DNS.
+  - پیاده‌سازی آیکون اختصاصی وکتور سپر امنیتی به جای آیکون خام سیستم.
+  - فعال‌سازی باز شدن مستقیم برنامه با نگه‌داشتن دست روی دکمه (Long Press) از طریق فیلتر سراسری `QS_TILE_PREFERENCES` به جای رفتن به تنظیمات App Info اندروید.
+  - هماهنگی خودکار عنوان، زیرعنوان و نمایش نام سرور متصل در کاشی با زبان فعال برنامه.
+- **اعلانات حرفه‌ای با کرونومتر و قطع اتصال آنی (مشابه v2rayNG):**
+  - افزوده شدن کرونومتر زنده (`Chronometer`) درون اعلان برای مشاهده لحظه‌ای مدت زمان دقیق اتصال به ثانیه.
+  - نمایش نام سرور متصل، نشانی‌های IP و آیکون یکپارچه حفاظتی.
+  - تعبیه دکمه اکشن مستقیم «خاموش کردن» / «Disconnect» جهت قطع فوری تونل DNS بدون نیاز به باز کردن برنامه.
+- **تشخیص خودکار زبان پیش‌فرض دستگاه:**
+  - در اولین نصب و اجرای برنامه، زبان برنامه به طور هوشمند بر اساس زبان سیستم (فارسی برای دستگاه‌های با زبان فارسی/دری و انگلیسی برای سایرین) تنظیم می‌شود.
+- **اسکرول افقی تراشه‌های تست دامنه در صفحه اصلی:**
+  - تبدیل ردیف دامنه‌های نمونه تست در صفحه اصلی به `LazyRow` روان با دامنه‌های محبوب (گوگل، داکر تحریم‌شکن، شکن، ویکی‌پدیا، کلودفلر، گیت‌هاب) همگام با طراحی صفحه تست سرعت.
+
+---
+
+### نسخهٔ ۱.۲.۱
 - **اسکرول یکپارچه تمام‌صفحه در تب‌های تست سرعت:**
   - تبدیل هر دو تب «تست رزولوشن (NSLookup)» و «بنچمارک پینگ (Ping)» به یک محفظه اسکرول یکپارچه (`LazyColumn`).
   - رفع مشکل شناور و ثابت ماندن کارت‌های بالای صفحه؛ اکنون با اسکرول به سمت پایین، کارت‌های تنظیمات و تراشه‌های دسته‌بندی به راحتی به بالا حرکت کرده و ۱۰۰٪ ارتفاع صفحه به فهرست سرورها اختصاص می‌یابد.
@@ -50,7 +67,27 @@
 
 ## English
 
-### Version 1.2.1 (Latest)
+### Version 1.2.2 (Latest)
+**Smart Quick Settings Tile, v2rayNG-Style Live Chronometer Notification with Instant Disconnect, System Default Language Auto-Detection, and Horizontally Scrollable Domain Chips.**
+
+**What's New in v1.2.2:**
+- **Robust & Responsive Quick Settings Tile:**
+  - Complete overhaul of `DnsQuickTileService` with reactive state flows, delivering instantaneous visual tile toggling matching the DNS connection status.
+  - Dedicated vector security shield icon replacing raw system glyphs.
+  - Long-pressing the Quick Settings tile immediately opens the DNS Master app via `QS_TILE_PREFERENCES` rather than dumping the user into Android's system App Info screen.
+  - Seamless localization of tile labels, subtitles, and server identifiers matching the active language.
+- **v2rayNG-Style Foreground Notification:**
+  - Embedded live elapsed time chronometer showing precise real-time connection uptime to the second.
+  - Prominent "Disconnect" / "خاموش کردن" direct action button enabling instant 1-tap disconnection without opening the app.
+  - Crisp shield notification badge and active DNS server IP details.
+- **System Default Language Auto-Detection:**
+  - Upon first install and launch, DNS Master intelligently configures its UI language matching the Android device's default locale (Persian for Persian/Dari locales, English for all others).
+- **Horizontally Scrollable Domain Chips on Home:**
+  - Upgraded the home screen resolution test domain bar to a smooth `LazyRow`, featuring popular test domains (Google, Anti-Sanction Docker, Shecan, Wikipedia, Cloudflare, GitHub) matching the speed test screen design.
+
+---
+
+### Version 1.2.1
 **Unified Full-Height Scrollable Speed Test Layout & Unclipped Server Search Input.**
 
 **What's New in v1.2.1:**

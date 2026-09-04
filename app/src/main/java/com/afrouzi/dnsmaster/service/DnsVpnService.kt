@@ -157,9 +157,25 @@ class DnsVpnService : VpnService() {
             forwarderThread = thread
             thread.start()
 
+            val startTime = System.currentTimeMillis()
             DnsRepository.connectionState.value = VpnConnectionState.CONNECTED
             DnsRepository.connectedDns.value = dnsItem
-            DnsRepository.connectedStartTime.value = System.currentTimeMillis()
+            DnsRepository.connectedStartTime.value = startTime
+
+            // Update notification to Connected state with live Chronometer (v2rayNG style)
+            try {
+                val connectedNotification = NotificationHelper.buildVpnNotification(
+                    context = this,
+                    dnsItem = dnsItem,
+                    isPersian = isPersian,
+                    startTime = startTime,
+                    isConnected = true
+                )
+                val notifManager = getSystemService(NotificationManager::class.java)
+                notifManager?.notify(NotificationHelper.NOTIFICATION_ID, connectedNotification)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to update notification with chronometer", e)
+            }
 
             DnsQuickTileService.updateTileState(this, true)
             Log.i(TAG, "DNS VPN started successfully with ${dnsItem.name} (${dnsItem.primaryIp})")
