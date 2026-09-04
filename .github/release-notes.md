@@ -1,6 +1,28 @@
 ## فارسی
 
-نسخهٔ **۱.۱.۰** — بازطراحی کامل بر پایه استانداردهای اپل iOS و بهبود پایداری هسته DNS.
+### نسخهٔ ۱.۲.۰ (جدید)
+**فونت اختصاصی IRANSansX Eco، بنچمارک واقعی رزولوشن دامنه (NSLookup Engine)، نوار ناوبری تطبیقی و معرفی کامل توسعه‌دهنده.**
+
+**تغییرات و قابلیت‌های جدید نسخه ۱.۲.۰:**
+- **فونت اختصاصی IRANSansX Eco:** پیاده‌سازی تایپوگرافی اصیل و حرفه‌ای فارسی با فونت ایران‌سنس ایکس اکو (شامل ارقام فارسی FaNum برای زمان و پینگ) در تمامی صفحات و المان‌های برنامه با کرنینگ و تراز خطی دقیق.
+- **موتور تست واقعی رزولوشن دامنه (RFC 1035 UDP DNS Engine):**
+  - شبیه‌ساز واقعی ابزار NSLookup ویندوز و دیگ لینوکس بر بستر پکت‌های خام UDP بدون اتکا به پینگ‌های ICMP ساده یا کش سیستم‌عامل.
+  - سنجش میلی‌ثانیه‌ای زمان پاسخ واقعی، نمایش وضعیت RCODE (نظیر NOERROR)، خواندن زمان انقضای TTL پکت‌ها و استخراج آی‌پی‌های بازگشتی.
+  - تست زنده دامنه در صفحه اصلی با تراشه‌های سریع (گوگل، داکر، شکن، ویکی‌پدیا).
+  - حالت بنچمارک رزولوشن در صفحه تست سرعت با قابلیت تست همزمان تمام سرورها، نشان طلایی سریع‌ترین پاسخ‌دهنده و دکمه اتصال مستقیم ۱-کلیکه.
+- **پشتیبانی کامل و استاندارد از انواع سیستم‌های ناوبری اندروید:**
+  - تطبیق‌پذیری هوشمند با حالت ۳ دکمه کلاسیک (Back, Home, Recents) و حالت حرکتی (Gesture Navigation) با WindowInsets استاندارد، جلوگیری از تداخل و کشیدگی نوار ناوبری پایین.
+- **اصلاح جهت فلش‌ها در زبان فارسی (RTL):** هدایت درست و استاندارد جهت فلش کارد سرور انتخابی و سلول‌های تنظیمی رو به لبه خارجی صفحه در هر دو زبان فارسی (`<`) و انگلیسی (`>`).
+- **دکمه قطع اتصال فوری در اعلانات با عملکرد ۱۰۰٪ تضمین‌شده:** ارسال مستقیم اینتنت سرویس جهت قطع لحظه‌ای اتصال بدون هیچ‌گونه تاخیر یا عدم پاسخگویی در اندرویدهای جدید.
+- **بخش کامل توسعه‌دهنده و درباره برنامه (مطابق با اکوسیستم MyCard):**
+  - پروفایل مصطفی افروزی با بیوگرافی و تخصص در هر دو زبان فارسی و انگلیسی.
+  - وب‌سایت رسمی شخصی با ردیاب‌های اختصاصی زبان (`utm_source=dnsmaster&utm_medium=app&utm_campaign=about_fa`).
+  - لینک‌های معتبر به گیت‌هاب، لینکدین و پروفایل‌های توسعه‌دهنده در کافه‌بازار و مایکت.
+
+---
+
+### نسخهٔ ۱.۱.۰
+**بازطراحی کامل بر پایه استانداردهای اپل iOS و بهبود پایداری هسته DNS.**
 
 **تغییرات و بهینه‌سازی‌های نسخه ۱.۱.۰:**
 - **طراحی به سبک Apple iOS HIG:** خروج کامل از طراحی‌های شلوغ و نئونی مصنوعی و بازطراحی اصیل، تمیز و مینیمال بر پایه دستورالعمل طراحی سیستم‌عامل iOS اپل:
@@ -17,7 +39,27 @@
 
 ## English
 
-Version **1.1.0** — Complete Apple iOS Human Interface Guidelines (HIG) Redesign & High-Performance DNS Engine.
+### Version 1.2.0 (Latest)
+**IRANSansX Eco Typography, Real RFC 1035 UDP NSLookup Engine & Benchmark, Adaptive System Insets, and Developer Profile.**
+
+**What's New in v1.2.0:**
+- **IRANSansX Eco Typography:** Integrated premium Persian typography with the official IranSansX Eco font family (including FaNum Persian digits for counters and latencies) across all screens and UI components with precise line height and baseline metrics.
+- **RFC 1035 UDP DNS Lookup Engine & Benchmark:**
+  - Custom raw UDP socket query builder & parser operating identically to Windows `nslookup` and Linux `dig`.
+  - Accurately inspects response time in milliseconds, extracts resolved IP addresses, reads record TTL, and reports RCODE status (`NOERROR`, `NXDOMAIN`, etc.).
+  - Interactive live domain inspector on HomeScreen with quick chips (`google.com`, `docker.com`, `shecan.ir`, `wikipedia.org`).
+  - Concurrent multi-server resolution benchmark on SpeedTestScreen with fastest resolver trophy badge and 1-tap connect buttons.
+- **Adaptive System Navigation Bar Insets:** Full edge-to-edge support seamlessly accommodating both classic 3-Button navigation and modern Gesture Navigation across all Android versions without clipping or content overlap.
+- **RTL-Aware Outward Chevron Arrows:** Selected server and settings list chevrons now reliably point outward to the screen edge in both Persian (`<`) and English (`>`).
+- **100% Reliable Foreground Notification Disconnect:** Direct service PendingIntent stop command terminating the DNS tunnel and displaying session summary instantly across all Android versions.
+- **Developer Profile & About Section:**
+  - Complete Mostafa Afrouzi developer profile (bio, official portfolio website with language-specific UTM parameters, GitHub, and LinkedIn).
+  - Direct developer store links for CafeBazaar and Myket.
+
+---
+
+### Version 1.1.0
+**Complete Apple iOS Human Interface Guidelines (HIG) Redesign & High-Performance DNS Engine.**
 
 **What's New in v1.1.0:**
 - **Apple iOS HIG Design Aesthetic:** Overhauled user interface to an authentic, minimalist Apple iOS aesthetic:

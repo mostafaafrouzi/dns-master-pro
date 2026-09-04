@@ -57,15 +57,18 @@ fun MainAppShell() {
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-        DnsMasterTheme(themePreference = themePreference) {
+        DnsMasterTheme(themePreference = themePreference, isPersian = isPersian) {
             Scaffold(
+                contentWindowInsets = WindowInsets.statusBars,
                 bottomBar = {
                     if (currentTab != AppTab.CUSTOM_DNS) {
                         Surface(
                             color = MaterialTheme.colorScheme.surface,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column {
+                            Column(
+                                modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                            ) {
                                 HorizontalDivider(
                                     thickness = 0.5.dp,
                                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
@@ -73,7 +76,8 @@ fun MainAppShell() {
                                 NavigationBar(
                                     containerColor = MaterialTheme.colorScheme.surface,
                                     tonalElevation = 0.dp,
-                                    modifier = Modifier.height(62.dp)
+                                    windowInsets = WindowInsets(0, 0, 0, 0),
+                                    modifier = Modifier.height(58.dp)
                                 ) {
                                     val itemColors = NavigationBarItemDefaults.colors(
                                         selectedIconColor = AppleBlue,

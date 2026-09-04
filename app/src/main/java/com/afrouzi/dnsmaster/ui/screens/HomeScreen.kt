@@ -19,14 +19,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Lan
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
+import com.afrouzi.dnsmaster.core.network.DnsLookupEngine
+import com.afrouzi.dnsmaster.core.network.DnsLookupResult
 import com.afrouzi.dnsmaster.util.NetworkDiagnosticsHelper
 import com.afrouzi.dnsmaster.util.NetworkInfoState
 import com.afrouzi.dnsmaster.util.NetworkTransport
@@ -103,6 +108,11 @@ fun HomeScreen(
     var lastSessionDuration by remember { mutableStateOf("") }
     var lastSessionServerName by remember { mutableStateOf("") }
     var showDisconnectionDialog by remember { mutableStateOf(false) }
+
+    // Live NSLookup Inspector state
+    var lookupDomain by remember { mutableStateOf("google.com") }
+    var isLookingUp by remember { mutableStateOf(false) }
+    var lookupResult by remember { mutableStateOf<DnsLookupResult?>(null) }
 
     LaunchedEffect(connectionState) {
         networkInfo = NetworkDiagnosticsHelper.getNetworkInfo(context)
@@ -230,7 +240,7 @@ fun HomeScreen(
                     }
 
                     Icon(
-                        imageVector = Icons.Default.ChevronRight,
+                        imageVector = if (isPersian) Icons.Default.ChevronLeft else Icons.Default.ChevronRight,
                         contentDescription = "Select",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.size(20.dp)
@@ -517,6 +527,222 @@ fun HomeScreen(
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // NSLookup Resolution Inspector Card (Real DNS Query Test)
+        IosGroupedCard(cornerRadius = 18.dp) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AppleBlue),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.TravelExplore,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = if (isPersian) "تست زنده رزولوشن دامنه (NSLookup)" else "Live DNS Resolver (NSLookup)",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = if (isPersian) "تست واقعی حل نام دامنه از روی سرور فعال" else "Real RFC 1035 query against active DNS",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    if (isLookingUp) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = AppleBlue,
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Quick Domain Chips
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val quickDomains = listOf("google.com", "docker.com", "shecan.ir", "wikipedia.org")
+                    quickDomains.forEach { domain ->
+                        val isSelected = lookupDomain == domain
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isSelected) AppleBlue.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.clickable { lookupDomain = domain }
+                        ) {
+                            Text(
+                                text = domain,
+                                fontSize = 11.sp,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) AppleBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Domain Input & Resolve Button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = lookupDomain,
+                        onValueChange = { lookupDomain = it },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AppleBlue,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            if (!isLookingUp && lookupDomain.isNotBlank()) {
+                                isLookingUp = true
+                                coroutineScope.launch {
+                                    lookupResult = DnsLookupEngine.resolve(
+                                        domain = lookupDomain,
+                                        serverIp = currentDns.primaryIp
+                                    )
+                                    isLookingUp = false
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+                        modifier = Modifier.height(50.dp)
+                    ) {
+                        Text(
+                            text = if (isPersian) "تست" else "Resolve",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+
+                // Results Container
+                lookupResult?.let { res ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    IosHairlineDivider()
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            val badgeColor = if (res.isSuccess) AppleGreen else AppleRed
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = badgeColor.copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    text = res.rCode,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = badgeColor,
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${res.latencyMs}ms",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            res.ttlSeconds?.let { ttl ->
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "TTL: ${ttl}s",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        if (res.isAntiSanctionVerified) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = AppleOrange.copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    text = if (isPersian) "✓ عبور از تحریم" else "✓ Anti-Sanction",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppleOrange,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    if (res.resolvedIps.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = if (isPersian) "آی‌پی‌های دریافتی:" else "Resolved IPs:",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            res.resolvedIps.take(3).forEach { ip ->
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                ) {
+                                    Text(
+                                        text = ip,
+                                        fontSize = 11.sp,
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

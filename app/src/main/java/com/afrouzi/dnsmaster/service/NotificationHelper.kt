@@ -41,10 +41,10 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val disconnectIntent = Intent(context, VpnActionReceiver::class.java).apply {
-            action = VpnActionReceiver.ACTION_DISCONNECT
+        val disconnectIntent = Intent(context, DnsVpnService::class.java).apply {
+            action = DnsVpnService.ACTION_STOP
         }
-        val disconnectPendingIntent = PendingIntent.getBroadcast(
+        val disconnectPendingIntent = PendingIntent.getService(
             context, 1, disconnectIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

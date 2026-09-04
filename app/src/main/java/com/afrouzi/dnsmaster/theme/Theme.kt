@@ -46,6 +46,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun DnsMasterTheme(
     themePreference: String = "dark",
+    isPersian: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val isDark = when (themePreference) {
@@ -55,10 +56,11 @@ fun DnsMasterTheme(
     }
 
     val colorScheme = if (isDark) DarkColorScheme else LightColorScheme
+    val typography = if (isPersian) persianTypography() else Typography
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content
     )
 }
