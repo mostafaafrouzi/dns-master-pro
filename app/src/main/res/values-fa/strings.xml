@@ -80,4 +80,53 @@
     <string name="session_summary_server">سرور استفاده‌شده</string>
     <string name="session_summary_duration">مدت زمان اتصال</string>
     <string name="dismiss">متوجه شدم</string>
+
+    <!-- ویژگی‌های پیشرفته جدید -->
+    <string name="battery_dialog_title">بهینه‌سازی باتری و فعالیت پس‌زمینه</string>
+    <string name="battery_dialog_message">برای جلوگیری از قطع شدن اتصال امن DNS هنگام خاموش بودن صفحه یا قرار گرفتن گوشی در جیب، لطفاً برنامه را از محدودیت باتری مستثنی کنید.</string>
+    <string name="battery_btn_exempt">فعال‌سازی بدون محدودیت</string>
+    <string name="battery_btn_later">شاید بعداً</string>
+    <string name="pref_battery_optimization">بهینه‌سازی مصرف باتری</string>
+    <string name="pref_battery_optimization_active">نامحدود (پایدار در پس‌زمینه)</string>
+    <string name="pref_battery_optimization_inactive">محدود (امکان قطع در پس‌زمینه)</string>
+
+    <string name="pref_doh_title">دی‌ان‌اس رمزنگاری‌شده (DoH)</string>
+    <string name="pref_doh_desc">رمزگذاری درخواست‌ها با پروتکل HTTPS (RFC 8484) جهت حفظ حریم خصوصی و امنیت اطلاعات</string>
+    <string name="doh_badge">رمزگذاری DoH</string>
+
+    <string name="pref_dns_cache_title">کش حافظه داخلی (Local Cache)</string>
+    <string name="pref_dns_cache_desc">پاسخ‌دهی آنی زیر ۱ میلی‌ثانیه به دامنه‌های تکراری با مدیریت زمان انقضا (TTL)</string>
+    <string name="cache_hits">درخواست‌های کش شده</string>
+
+    <string name="split_tunneling_title">تفکیک ترافیک برنامه‌ها (Split Tunneling)</string>
+    <string name="split_tunneling_desc">انتخاب برنامه‌هایی که باید از دی‌ان‌اس استفاده کرده یا مستثنی شوند</string>
+    <string name="split_mode_all">همه برنامه‌ها (پیش‌فرض)</string>
+    <string name="split_mode_bypass">استثنا کردن برنامه‌های انتخابی</string>
+    <string name="split_mode_only">تنها برنامه‌های انتخابی</string>
+    <string name="search_apps">جستجوی برنامه‌های نصب‌شده...</string>
+    <string name="selected_apps_count">%1$d برنامه انتخاب شده</string>
+
+    <string name="pref_auto_disconnect_title">تایمر قطع خودکار</string>
+    <string name="pref_auto_disconnect_desc">قطع خودکار اتصال دی‌ان‌اس پس از زمان تعیین‌شده</string>
+    <string name="timer_off">غیرفعال</string>
+    <string name="timer_15m">۱۵ دقیقه</string>
+    <string name="timer_30m">۳۰ دقیقه</string>
+    <string name="timer_1h">۱ ساعت</string>
+    <string name="timer_2h">۲ ساعت</string>
+    <string name="timer_4h">۴ ساعت</string>
+
+    <string name="leak_test_title">تست نشت و امنیت DNS</string>
+    <string name="leak_test_desc">راستی‌آزمایی عدم نشت آی‌پی و اطمینان از عملکرد رمزنگاری سرور دی‌ان‌اس</string>
+    <string name="btn_run_leak_test">شروع تست نشت DNS</string>
+    <string name="leak_test_in_progress">در حال بررسی سرور بالادست...</string>
+    <string name="leak_secure">کاملاً ایمن - هیچ نشتی وجود ندارد</string>
+    <string name="leak_detected">هشدار - احتمال نشت اطلاعات به ISP</string>
+    <string name="detected_dns_server">سرور بالادست فعال:</string>
+    <string name="packet_loss">اتلاف</string>
+    <string name="jitter">نوسان</string>
+
+    <string name="pref_notification_title">اعلان وضعیت اتصال</string>
+    <string name="pref_notification_desc">نمایش سرور فعال، تایمر اتصال و دکمه خاموش کردن در نوار اعلان‌ها</string>
+    <string name="pref_notification_active">فعال (نمایش در نوار اعلان‌ها)</string>
+    <string name="pref_notification_inactive">غیرفعال (برای فعال‌سازی ضربه بزنید)</string>
 </resources>

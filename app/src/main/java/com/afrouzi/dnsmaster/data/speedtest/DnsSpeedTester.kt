@@ -62,6 +62,12 @@ object DnsSpeedTester {
         return baos.toByteArray()
     }
 
+    data class PingDetailedStats(
+        val avgPingMs: Long,
+        val packetLossPercent: Int,
+        val jitterMs: Long
+    )
+
     /**
      * Measures round trip time for a DNS query in milliseconds.
      */
@@ -94,29 +100,101 @@ object DnsSpeedTester {
     }
 
     /**
-     * Tests a single DnsItem, trying primary IP first, then secondary IP if primary fails.
+     * Sends multiple DNS packets to accurately calculate Average Ping, Packet Loss %, and Jitter.
+     */
+    suspend fun pingDnsServerDetailed(
+        ip: String,
+        domain: String = "google.com",
+        packetCount: Int = 4,
+        timeoutPerPacketMs: Int = 1800
+    ): PingDetailedStats? {
+        return withContext(Dispatchers.IO) {
+            val successfulRtts = mutableListOf<Long>()
+            val targetAddr = try {
+                InetAddress.getByName(ip)
+            } catch (e: Exception) {
+                return@withContext null
+            }
+
+            var socket: DatagramSocket? = null
+            try {
+                socket = DatagramSocket()
+                socket.soTimeout = timeoutPerPacketMs
+
+                for (i in 0 until packetCount) {
+                    try {
+                        val queryBytes = buildDnsQuery(domain)
+                        val packet = DatagramPacket(queryBytes, queryBytes.size, targetAddr, 53)
+                        val startTime = System.currentTimeMillis()
+                        socket.send(packet)
+
+                        val buffer = ByteArray(512)
+                        val receivePacket = DatagramPacket(buffer, buffer.size)
+                        socket.receive(receivePacket)
+                        val rtt = System.currentTimeMillis() - startTime
+                        if (receivePacket.length > 12) {
+                            successfulRtts.add(rtt)
+                        }
+                    } catch (ignored: Exception) {
+                        // Packet loss or timeout
+                    }
+                    if (i < packetCount - 1) {
+                        kotlinx.coroutines.delay(20)
+                    }
+                }
+            } finally {
+                try { socket?.close() } catch (ignored: Exception) {}
+            }
+
+            val receivedCount = successfulRtts.size
+            val lossPercent = ((packetCount - receivedCount) * 100) / packetCount
+
+            if (receivedCount > 0) {
+                val avgPing = successfulRtts.average().toLong()
+                val jitter = if (receivedCount > 1) {
+                    successfulRtts.map { kotlin.math.abs(it - avgPing) }.average().toLong()
+                } else {
+                    0L
+                }
+                PingDetailedStats(
+                    avgPingMs = avgPing,
+                    packetLossPercent = lossPercent,
+                    jitterMs = jitter
+                )
+            } else {
+                null
+            }
+        }
+    }
+
+    /**
+     * Tests a single DnsItem, calculating Ping, Packet Loss, and Jitter.
      */
     suspend fun testDnsItem(item: DnsItem): SpeedTestResult {
         return withContext(Dispatchers.IO) {
-            val primaryPing = pingDnsServer(item.primaryIp)
-            val finalPing = if (primaryPing != null) {
-                primaryPing
+            val primaryStats = pingDnsServerDetailed(item.primaryIp)
+            val finalStats = if (primaryStats != null) {
+                primaryStats
             } else if (item.secondaryIp.isNotBlank()) {
-                pingDnsServer(item.secondaryIp)
+                pingDnsServerDetailed(item.secondaryIp)
             } else {
                 null
             }
 
-            if (finalPing != null) {
+            if (finalStats != null) {
                 SpeedTestResult(
-                    dnsItem = item.copy(pingMs = finalPing),
-                    pingMs = finalPing,
+                    dnsItem = item.copy(pingMs = finalStats.avgPingMs),
+                    pingMs = finalStats.avgPingMs,
+                    packetLoss = finalStats.packetLossPercent,
+                    jitterMs = finalStats.jitterMs,
                     status = SpeedTestStatus.SUCCESS
                 )
             } else {
                 SpeedTestResult(
                     dnsItem = item,
                     pingMs = null,
+                    packetLoss = 100,
+                    jitterMs = null,
                     status = SpeedTestStatus.TIMEOUT
                 )
             }

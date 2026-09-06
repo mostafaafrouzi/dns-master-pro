@@ -2,6 +2,8 @@ package com.afrouzi.dnsmaster.service
 
 import android.net.VpnService
 import android.util.Log
+import com.afrouzi.dnsmaster.core.network.DohResolver
+import com.afrouzi.dnsmaster.core.network.LocalDnsCache
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.DatagramPacket
@@ -10,6 +12,7 @@ import java.net.InetAddress
 import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 class DnsPacketForwarder(
@@ -17,7 +20,11 @@ class DnsPacketForwarder(
     private val vpnInput: FileInputStream,
     private val vpnOutput: FileOutputStream,
     private val primaryDnsIp: String,
-    private val secondaryDnsIp: String = ""
+    private val secondaryDnsIp: String = "",
+    private val dohUrl: String? = null,
+    private val isDohEnabled: Boolean = false,
+    private val isLocalCacheEnabled: Boolean = true,
+    private val onCacheHit: (() -> Unit)? = null
 ) : Runnable {
 
     companion object {
@@ -29,6 +36,8 @@ class DnsPacketForwarder(
     private val isRunning = AtomicBoolean(true)
     private var upstreamSocket: DatagramSocket? = null
     private val pendingQueries = ConcurrentHashMap<Int, ClientSession>()
+    private val dnsCache = LocalDnsCache(500)
+    private val dohExecutor = Executors.newFixedThreadPool(4)
 
     private val primaryAddress: InetAddress? by lazy {
         try {
@@ -66,10 +75,13 @@ class DnsPacketForwarder(
         } catch (e: Exception) {
             Log.e(TAG, "Error closing upstream socket", e)
         }
+        try {
+            dohExecutor.shutdownNow()
+        } catch (ignored: Exception) {}
     }
 
     override fun run() {
-        Log.i(TAG, "DnsPacketForwarder started for DNS: $primaryDnsIp / $secondaryDnsIp")
+        Log.i(TAG, "DnsPacketForwarder started. Primary: $primaryDnsIp, Secondary: $secondaryDnsIp, DoH: $isDohEnabled ($dohUrl), Cache: $isLocalCacheEnabled")
 
         try {
             val socket = DatagramSocket()
@@ -91,6 +103,12 @@ class DnsPacketForwarder(
                         val session = pendingQueries.remove(id) ?: continue
 
                         val dnsPayload = recvBuffer.copyOf(packet.length)
+                        if (isLocalCacheEnabled) {
+                            val qKey = dnsCache.extractQuestionKey(dnsPayload)
+                            if (qKey != null) {
+                                dnsCache.put(qKey, dnsPayload)
+                            }
+                        }
                         sendTunResponse(session, dnsPayload)
                     } catch (e: SocketTimeoutException) {
                         continue
@@ -121,6 +139,9 @@ class DnsPacketForwarder(
             try {
                 upstreamSocket?.close()
             } catch (e: Exception) {}
+            try {
+                dohExecutor.shutdownNow()
+            } catch (ignored: Exception) {}
         }
     }
 
@@ -146,7 +167,50 @@ class DnsPacketForwarder(
 
         val dnsTransactionId = ((dnsPayload[0].toInt() and 0xFF) shl 8) or (dnsPayload[1].toInt() and 0xFF)
 
-        pendingQueries[dnsTransactionId] = ClientSession(srcIp, srcPort, dstIp, destPort)
+        // 1. Check Local Cache with instant 0ms response
+        val questionKey = if (isLocalCacheEnabled) dnsCache.extractQuestionKey(dnsPayload) else null
+        if (questionKey != null) {
+            val cachedResponse = dnsCache.get(questionKey, dnsTransactionId)
+            if (cachedResponse != null) {
+                val session = ClientSession(srcIp, srcPort, dstIp, destPort)
+                sendTunResponse(session, cachedResponse)
+                onCacheHit?.invoke()
+                return
+            }
+        }
+
+        val session = ClientSession(srcIp, srcPort, dstIp, destPort)
+
+        // 2. DoH Mode (RFC 8484)
+        if (isDohEnabled && !dohUrl.isNullOrBlank()) {
+            dohExecutor.execute {
+                val dohResponse = DohResolver.resolve(dohUrl, dnsPayload)
+                if (dohResponse != null && dohResponse.size >= 12) {
+                    dohResponse[0] = ((dnsTransactionId shr 8) and 0xFF).toByte()
+                    dohResponse[1] = (dnsTransactionId and 0xFF).toByte()
+                    if (isLocalCacheEnabled && questionKey != null) {
+                        dnsCache.put(questionKey, dohResponse)
+                    }
+                    sendTunResponse(session, dohResponse)
+                    return@execute
+                }
+                // Fallback to UDP if DoH fails
+                forwardUdp(dnsPayload, dnsTransactionId, session, socket)
+            }
+            return
+        }
+
+        // 3. Direct UDP query
+        forwardUdp(dnsPayload, dnsTransactionId, session, socket)
+    }
+
+    private fun forwardUdp(
+        dnsPayload: ByteArray,
+        dnsTransactionId: Int,
+        session: ClientSession,
+        socket: DatagramSocket
+    ) {
+        pendingQueries[dnsTransactionId] = session
 
         // Clean queries older than 8 seconds
         val now = System.currentTimeMillis()

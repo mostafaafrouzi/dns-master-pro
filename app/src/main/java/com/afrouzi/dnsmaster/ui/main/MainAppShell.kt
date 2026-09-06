@@ -29,6 +29,7 @@ enum class AppTab {
     SERVERS,
     SPEED_TEST,
     CUSTOM_DNS,
+    SPLIT_TUNNEL,
     SETTINGS
 }
 
@@ -45,23 +46,13 @@ fun MainAppShell() {
 
     var currentTab by remember { mutableStateOf(AppTab.HOME) }
 
-    // Request notification permission for Android 13+
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) {}
-
-    LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
         DnsMasterTheme(themePreference = themePreference, isPersian = isPersian) {
             Scaffold(
                 contentWindowInsets = WindowInsets.statusBars,
                 bottomBar = {
-                    if (currentTab != AppTab.CUSTOM_DNS) {
+                    if (currentTab != AppTab.CUSTOM_DNS && currentTab != AppTab.SPLIT_TUNNEL) {
                         Surface(
                             color = MaterialTheme.colorScheme.surface,
                             modifier = Modifier.fillMaxWidth()
@@ -174,8 +165,13 @@ fun MainAppShell() {
                             onNavigateBack = { currentTab = AppTab.SERVERS },
                             isPersian = isPersian
                         )
+                        AppTab.SPLIT_TUNNEL -> SplitTunnelScreen(
+                            repository = repository,
+                            onBackClick = { currentTab = AppTab.SETTINGS }
+                        )
                         AppTab.SETTINGS -> SettingsScreen(
                             repository = repository,
+                            onNavigateToSplitTunnel = { currentTab = AppTab.SPLIT_TUNNEL },
                             isPersian = isPersian
                         )
                     }

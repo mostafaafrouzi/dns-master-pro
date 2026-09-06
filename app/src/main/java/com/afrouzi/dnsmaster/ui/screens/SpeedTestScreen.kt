@@ -31,6 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.afrouzi.dnsmaster.core.network.DnsLeakReport
+import com.afrouzi.dnsmaster.core.network.DnsLeakTester
 import com.afrouzi.dnsmaster.core.network.DnsLookupEngine
 import com.afrouzi.dnsmaster.core.network.DnsLookupResult
 import com.afrouzi.dnsmaster.core.utils.NetworkUtils
@@ -88,6 +90,23 @@ fun SpeedTestScreen(
     var isLookupTesting by remember { mutableStateOf(false) }
     var lookupResults by remember {
         mutableStateOf(allServers.map { AdvancedLookupItemState(it, null, SpeedTestStatus.IDLE) })
+    }
+
+    val connectedDns by DnsRepository.connectedDns.collectAsState()
+
+    // DNS Leak Test State
+    var isLeakTesting by remember { mutableStateOf(false) }
+    var leakReport by remember { mutableStateOf<DnsLeakReport?>(null) }
+
+    val runDnsLeakTest: () -> Unit = {
+        if (!isLeakTesting) {
+            isLeakTesting = true
+            coroutineScope.launch {
+                val report = DnsLeakTester.runLeakTest(connectedDns)
+                leakReport = report
+                isLeakTesting = false
+            }
+        }
     }
 
     var selectedItemForVpn by remember { mutableStateOf<DnsItem?>(null) }
@@ -212,12 +231,16 @@ fun SpeedTestScreen(
             // Mode Selector: NSLookup vs Ping (scrolls naturally with page)
             item(key = "mode_selector") {
                 IosSegmentedControl(
-                    items = listOf("nslookup", "ping"),
+                    items = listOf("nslookup", "ping", "leak"),
                     selectedItem = testMode,
                     onItemSelected = { testMode = it },
                     itemLabel = {
-                        if (it == "nslookup") (if (isPersian) "تست رزولوشن (NSLookup)" else "NSLookup Resolver")
-                        else (if (isPersian) "بنچمارک پینگ (Ping)" else "Ping Benchmark")
+                        when (it) {
+                            "nslookup" -> if (isPersian) "تست دامنه" else "NSLookup"
+                            "ping" -> if (isPersian) "پینگ و اتلاف" else "Ping & Loss"
+                            "leak" -> if (isPersian) "تست نشت و امنیت" else "Leak Test"
+                            else -> it
+                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -435,7 +458,7 @@ fun SpeedTestScreen(
                     )
                 }
 
-            } else {
+            } else if (testMode == "ping") {
                 // Ping Benchmark Mode (scrolls with content)
                 item(key = "ping_card") {
                     IosGroupedCard(cornerRadius = 18.dp) {
@@ -649,6 +672,196 @@ fun SpeedTestScreen(
                         onApply = { connectToDns(item.dnsItem) },
                         isPersian = isPersian
                     )
+                }
+            } else {
+                // DNS Leak & Security Verification Mode
+                item(key = "leak_intro_card") {
+                    IosGroupedCard(cornerRadius = 18.dp) {
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(9.dp))
+                                        .background(AppleGreen.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = AppleGreen,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = if (isPersian) "تست نشت و امنیت DNS" else "DNS Leak & Security Test",
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = if (isPersian)
+                                            "راستی‌آزمایی عدم نشت درخواست‌ها به ISP و تایید سرور بالادست فعال"
+                                        else
+                                            "Verify ISP DNS is not leaking and confirm active upstream resolver",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = { runDnsLeakTest() },
+                                enabled = !isLeakTesting,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = AppleBlue,
+                                    contentColor = Color.White
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                            ) {
+                                if (isLeakTesting) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = if (isPersian) "در حال راستی‌آزمایی سرور..." else "Testing Upstream Resolver...",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Shield,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isPersian) "شروع تست نشت DNS" else "Run DNS Leak Test",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // If leak report is available, show details
+                leakReport?.let { report ->
+                    item(key = "leak_report_result") {
+                        val isSecure = report.isSecure
+                        val statusColor = if (isSecure) AppleGreen else AppleRed
+
+                        IosGroupedCard(
+                            cornerRadius = 16.dp,
+                            modifier = Modifier.border(1.dp, statusColor.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .background(statusColor.copy(alpha = 0.15f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isSecure) Icons.Default.CheckCircle else Icons.Default.Warning,
+                                                contentDescription = null,
+                                                tint = statusColor,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = if (isSecure) {
+                                                if (isPersian) "کاملاً ایمن - بدون نشت" else "Secure - No Leak"
+                                            } else {
+                                                if (isPersian) "هشدار - احتمال نشت DNS" else "Warning - Potential Leak"
+                                            },
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = statusColor
+                                        )
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant
+                                    ) {
+                                        Text(
+                                            text = "${report.responseTimeMs}ms",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text(
+                                    text = if (isPersian) report.summaryFa else report.summaryEn,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = 18.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(14.dp))
+                                IosHairlineDivider()
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = if (isPersian) "ارائه‌دهنده فعال" else "Active Resolver",
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = report.organizationOrIsp,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            text = if (isPersian) "آی‌پی سرور بالادست" else "Upstream IP",
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = report.detectedResolverIp ?: "--",
+                                            fontSize = 14.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

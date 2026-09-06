@@ -49,6 +49,7 @@ class DnsVpnService : VpnService() {
     private var vpnOutput: FileOutputStream? = null
     private var packetForwarder: DnsPacketForwarder? = null
     private var forwarderThread: Thread? = null
+    private var autoDisconnectJob: kotlinx.coroutines.Job? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO)
     private lateinit var repository: DnsRepository
 
@@ -87,6 +88,12 @@ class DnsVpnService : VpnService() {
             val dnsId = specificDnsId ?: repository.selectedDnsIdFlow.first()
             val dnsItem = repository.getDnsById(dnsId, customList) ?: DefaultDnsServers.list.first()
 
+            val dohEnabled = repository.dohEnabledFlow.first()
+            val localCacheEnabled = repository.localCacheEnabledFlow.first()
+            val splitMode = repository.splitTunnelModeFlow.first()
+            val splitPackages = repository.splitTunnelPackagesFlow.first()
+            val autoDisconnectMinutes = repository.autoDisconnectMinutesFlow.first()
+
             val isPersian = repository.languageFlow.first() == "fa"
             val notification = NotificationHelper.buildVpnNotification(this, dnsItem, isPersian)
 
@@ -117,11 +124,34 @@ class DnsVpnService : VpnService() {
                 .addDnsServer(VIRTUAL_DNS_IP)
                 .addRoute(VIRTUAL_DNS_IP, 32)
 
-            // Disallow our own app so speed tests and internal sockets bypass the VPN
-            try {
-                builder.addDisallowedApplication(packageName)
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not disallow package $packageName", e)
+            // Apply Split Tunneling configurations
+            when (splitMode) {
+                com.afrouzi.dnsmaster.model.SplitTunnelMode.BYPASS_SELECTED -> {
+                    try { builder.addDisallowedApplication(packageName) } catch (e: Exception) {}
+                    for (pkg in splitPackages) {
+                        if (pkg != packageName) {
+                            try {
+                                builder.addDisallowedApplication(pkg)
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Could not disallow package $pkg", e)
+                            }
+                        }
+                    }
+                }
+                com.afrouzi.dnsmaster.model.SplitTunnelMode.ONLY_SELECTED -> {
+                    for (pkg in splitPackages) {
+                        if (pkg != packageName) {
+                            try {
+                                builder.addAllowedApplication(pkg)
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Could not allow package $pkg", e)
+                            }
+                        }
+                    }
+                }
+                com.afrouzi.dnsmaster.model.SplitTunnelMode.ALL_APPS -> {
+                    try { builder.addDisallowedApplication(packageName) } catch (e: Exception) {}
+                }
             }
 
             builder.allowBypass()
@@ -149,7 +179,13 @@ class DnsVpnService : VpnService() {
                 vpnInput = inStream,
                 vpnOutput = outStream,
                 primaryDnsIp = dnsItem.primaryIp.trim(),
-                secondaryDnsIp = dnsItem.secondaryIp.trim()
+                secondaryDnsIp = dnsItem.secondaryIp.trim(),
+                dohUrl = dnsItem.dohUrl,
+                isDohEnabled = dohEnabled,
+                isLocalCacheEnabled = localCacheEnabled,
+                onCacheHit = {
+                    DnsRepository.cacheHitsCount.value++
+                }
             )
             packetForwarder = forwarder
 
@@ -161,6 +197,25 @@ class DnsVpnService : VpnService() {
             DnsRepository.connectionState.value = VpnConnectionState.CONNECTED
             DnsRepository.connectedDns.value = dnsItem
             DnsRepository.connectedStartTime.value = startTime
+            DnsRepository.isDohActive.value = dohEnabled && !dnsItem.dohUrl.isNullOrBlank()
+
+            // Setup Auto Disconnect Timer if configured
+            autoDisconnectJob?.cancel()
+            if (autoDisconnectMinutes > 0) {
+                autoDisconnectJob = serviceScope.launch {
+                    var remaining = autoDisconnectMinutes * 60L
+                    while (remaining > 0) {
+                        DnsRepository.autoDisconnectRemainingSeconds.value = remaining
+                        kotlinx.coroutines.delay(1000)
+                        remaining--
+                    }
+                    DnsRepository.autoDisconnectRemainingSeconds.value = null
+                    Log.i(TAG, "Auto-disconnect timer expired. Shutting down VPN.")
+                    stopVpn()
+                }
+            } else {
+                DnsRepository.autoDisconnectRemainingSeconds.value = null
+            }
 
             // Update notification to Connected state with live Chronometer (v2rayNG style)
             try {
@@ -178,7 +233,7 @@ class DnsVpnService : VpnService() {
             }
 
             DnsQuickTileService.updateTileState(this, true)
-            Log.i(TAG, "DNS VPN started successfully with ${dnsItem.name} (${dnsItem.primaryIp})")
+            Log.i(TAG, "DNS VPN started successfully with ${dnsItem.name} (${dnsItem.primaryIp}) [DoH: ${DnsRepository.isDohActive.value}]")
         } catch (e: Exception) {
             Log.e(TAG, "Error starting DNS VPN", e)
             stopVpn()
@@ -187,6 +242,12 @@ class DnsVpnService : VpnService() {
 
     private fun cleanupForwarder() {
         try {
+            autoDisconnectJob?.cancel()
+            autoDisconnectJob = null
+            DnsRepository.autoDisconnectRemainingSeconds.value = null
+            DnsRepository.isDohActive.value = false
+            DnsRepository.cacheHitsCount.value = 0L
+
             packetForwarder?.stop()
             packetForwarder = null
             forwarderThread?.interrupt()
@@ -210,6 +271,8 @@ class DnsVpnService : VpnService() {
         DnsRepository.connectionState.value = VpnConnectionState.DISCONNECTED
         DnsRepository.connectedDns.value = null
         DnsRepository.connectedStartTime.value = 0L
+        DnsRepository.autoDisconnectRemainingSeconds.value = null
+        DnsRepository.isDohActive.value = false
 
         DnsQuickTileService.updateTileState(this, false)
 
@@ -227,6 +290,7 @@ class DnsVpnService : VpnService() {
         }
         stopSelf()
     }
+
 
     override fun onRevoke() {
         stopVpn()

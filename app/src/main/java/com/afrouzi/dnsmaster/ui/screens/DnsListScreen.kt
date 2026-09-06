@@ -82,23 +82,12 @@ fun DnsListScreen(
         }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToAddCustom,
-                containerColor = AppleBlue,
-                contentColor = Color.White,
-                shape = CircleShape,
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Custom DNS", modifier = Modifier.size(24.dp))
-            }
-        }
-    ) { paddingValues ->
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(12.dp))
@@ -254,6 +243,19 @@ fun DnsListScreen(
                     }
                 }
             }
+        }
+
+        FloatingActionButton(
+            onClick = onNavigateToAddCustom,
+            containerColor = AppleBlue,
+            contentColor = Color.White,
+            shape = CircleShape,
+            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add Custom DNS", modifier = Modifier.size(24.dp))
         }
     }
 

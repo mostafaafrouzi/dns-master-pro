@@ -100,17 +100,45 @@ fun SpeedTestItem(
                             else -> AppleOrange
                         }
 
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = badgeColor.copy(alpha = 0.12f)
-                        ) {
-                            Text(
-                                text = "${ping}ms",
-                                color = badgeColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = badgeColor.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "${ping}ms",
+                                    color = badgeColor,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+
+                            if (result.packetLoss != null || result.jitterMs != null) {
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    if (result.packetLoss != null) {
+                                        val lossColor = if (result.packetLoss == 0) AppleGreen else AppleRed
+                                        Text(
+                                            text = "${result.packetLoss}% ${if (isPersian) "اتلاف" else "loss"}",
+                                            color = lossColor,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                    if (result.jitterMs != null) {
+                                        Text(
+                                            text = "±${result.jitterMs}ms",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))

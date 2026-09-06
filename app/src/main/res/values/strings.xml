@@ -80,4 +80,53 @@
     <string name="session_summary_server">Server Used</string>
     <string name="session_summary_duration">Session Duration</string>
     <string name="dismiss">Got It</string>
+
+    <!-- New Advanced Features -->
+    <string name="battery_dialog_title">Battery Optimization</string>
+    <string name="battery_dialog_message">To prevent Android from disconnecting your secure DNS when your phone is locked or in your pocket, please exempt DNS Master from battery optimization.</string>
+    <string name="battery_btn_exempt">Allow Unrestricted</string>
+    <string name="battery_btn_later">Maybe Later</string>
+    <string name="pref_battery_optimization">Battery Optimization</string>
+    <string name="pref_battery_optimization_active">Unrestricted (Background Safe)</string>
+    <string name="pref_battery_optimization_inactive">Restricted (Tap to optimize)</string>
+
+    <string name="pref_doh_title">DNS over HTTPS (DoH)</string>
+    <string name="pref_doh_desc">Encrypt DNS requests using HTTPS (RFC 8484) to defeat ISP censorship &amp; packet inspection</string>
+    <string name="doh_badge">DoH Encrypted</string>
+
+    <string name="pref_dns_cache_title">Local In-Memory Cache</string>
+    <string name="pref_dns_cache_desc">Instantly respond to repeated domain queries in &lt;1ms with TTL expiry</string>
+    <string name="cache_hits">Cache Hits</string>
+
+    <string name="split_tunneling_title">Per-App Split Tunneling</string>
+    <string name="split_tunneling_desc">Choose which apps route queries through DNS Master</string>
+    <string name="split_mode_all">All Apps (Standard)</string>
+    <string name="split_mode_bypass">Bypass Selected Apps</string>
+    <string name="split_mode_only">Only Selected Apps</string>
+    <string name="search_apps">Search installed apps...</string>
+    <string name="selected_apps_count">%1$d apps selected</string>
+
+    <string name="pref_auto_disconnect_title">Auto-Disconnect Timer</string>
+    <string name="pref_auto_disconnect_desc">Automatically disconnect VPN after specified idle time</string>
+    <string name="timer_off">Disabled</string>
+    <string name="timer_15m">15 Minutes</string>
+    <string name="timer_30m">30 Minutes</string>
+    <string name="timer_1h">1 Hour</string>
+    <string name="timer_2h">2 Hours</string>
+    <string name="timer_4h">4 Hours</string>
+
+    <string name="leak_test_title">DNS Leak &amp; Security Test</string>
+    <string name="leak_test_desc">Verify that your ISP DNS is not leaking and confirm active resolver identity</string>
+    <string name="btn_run_leak_test">Run DNS Leak Test</string>
+    <string name="leak_test_in_progress">Testing upstream resolver...</string>
+    <string name="leak_secure">Secure - No Leak Detected</string>
+    <string name="leak_detected">Warning - Potential DNS Leak</string>
+    <string name="detected_dns_server">Active Upstream Resolver</string>
+    <string name="packet_loss">Loss</string>
+    <string name="jitter">Jitter</string>
+
+    <string name="pref_notification_title">Connection Notification</string>
+    <string name="pref_notification_desc">Show active server, duration timer, and disconnect button in notification drawer</string>
+    <string name="pref_notification_active">Active (Visible in drawer)</string>
+    <string name="pref_notification_inactive">Disabled (Tap to enable)</string>
 </resources>

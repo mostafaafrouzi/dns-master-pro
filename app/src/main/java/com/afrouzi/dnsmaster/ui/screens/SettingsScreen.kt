@@ -1,7 +1,11 @@
 package com.afrouzi.dnsmaster.ui.screens
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,9 +14,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.AltRoute
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +45,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     repository: DnsRepository,
+    onNavigateToSplitTunnel: () -> Unit = {},
     modifier: Modifier = Modifier,
     isPersian: Boolean = false
 ) {
@@ -43,6 +55,47 @@ fun SettingsScreen(
     val currentLanguage by repository.languageFlow.collectAsState(initial = DnsRepository.currentLanguage.value)
     val currentTheme by repository.themeFlow.collectAsState(initial = "dark")
     val autoConnectBoot by repository.autoConnectBootFlow.collectAsState(initial = false)
+    val dohEnabled by repository.dohEnabledFlow.collectAsState(initial = false)
+    val localCacheEnabled by repository.localCacheEnabledFlow.collectAsState(initial = true)
+    val autoDisconnectMinutes by repository.autoDisconnectMinutesFlow.collectAsState(initial = 0)
+    val splitTunnelMode by repository.splitTunnelModeFlow.collectAsState(initial = com.afrouzi.dnsmaster.model.SplitTunnelMode.ALL_APPS)
+    val splitTunnelPackages by repository.splitTunnelPackagesFlow.collectAsState(initial = emptySet())
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as? PowerManager }
+    var isIgnoringBattery by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+            } else {
+                true
+            }
+        )
+    }
+    var areNotificationsEnabled by remember {
+        mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    isIgnoringBattery = powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+                }
+                areNotificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        areNotificationsEnabled = isGranted
+    }
 
     val openUrl: (String) -> Unit = { url ->
         try {
@@ -194,6 +247,316 @@ fun SettingsScreen(
                     onCheckedChange = { checked ->
                         coroutineScope.launch { repository.setAutoConnectBoot(checked) }
                     }
+                )
+            }
+
+            IosHairlineDivider(startIndent = 16.dp)
+
+            // Connection Notification Row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !areNotificationsEnabled) {
+                            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            try {
+                                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                }
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                try {
+                                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.parse("package:${context.packageName}")
+                                    }
+                                    context.startActivity(intent)
+                                } catch (ignored: Exception) {}
+                            }
+                        }
+                    }
+                    .padding(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    IosIconBadge(
+                        icon = Icons.Default.Notifications,
+                        color = if (areNotificationsEnabled) ApplePurple else AppleOrange
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = if (isPersian) "اعلان وضعیت اتصال" else "Connection Notification",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (areNotificationsEnabled) {
+                                if (isPersian) "فعال (نمایش در نوار اعلان‌ها)" else "Active (Visible in drawer)"
+                            } else {
+                                if (isPersian) "غیرفعال (برای فعال‌سازی ضربه بزنید)" else "Disabled (Tap to enable)"
+                            },
+                            fontSize = 12.sp,
+                            color = if (areNotificationsEnabled) AppleGreen else AppleOrange
+                        )
+                    }
+                }
+
+                Icon(
+                    imageVector = if (isPersian) Icons.Default.ChevronLeft else Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Section: Advanced Protection & Engine
+        SectionHeader(text = if (isPersian) "امکانات پیشرفته و بهینه‌سازی" else "ADVANCED PROTECTION & ENGINE")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        IosGroupedCard(cornerRadius = 16.dp) {
+            // DNS over HTTPS (DoH RFC 8484)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    IosIconBadge(icon = Icons.Default.Lock, color = AppleBlue)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = if (isPersian) "دی‌ان‌اس رمزنگاری‌شده (DoH)" else "DNS over HTTPS (DoH)",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (isPersian)
+                                "رمزنگاری درخواست‌ها از طریق پروتکل امن HTTPS (RFC 8484) جهت افزایش امنیت و حریم خصوصی"
+                            else
+                                "Encrypt queries via HTTPS (RFC 8484) to defeat ISP tampering",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                IosSwitch(
+                    checked = dohEnabled,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch { repository.setDohEnabled(checked) }
+                    }
+                )
+            }
+
+            IosHairlineDivider(startIndent = 16.dp)
+
+            // Local DNS Cache
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    IosIconBadge(icon = Icons.Default.Bolt, color = AppleGreen)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = if (isPersian) "کش حافظه محلی (Local Cache)" else "Local In-Memory Cache",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (isPersian)
+                                "پاسخ‌دهی آنی زیر ۱ میلی‌ثانیه به دامنه‌های مکرر با انقضای خودکار TTL"
+                            else
+                                "Resolve repeated queries in <1ms with automatic TTL caching",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                IosSwitch(
+                    checked = localCacheEnabled,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch { repository.setLocalCacheEnabled(checked) }
+                    }
+                )
+            }
+
+            IosHairlineDivider(startIndent = 16.dp)
+
+            // Auto-Disconnect Timer
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IosIconBadge(icon = Icons.Default.Timer, color = AppleOrange)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (isPersian) "تایمر قطع خودکار اتصال" else "Auto-Disconnect Timer",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (isPersian)
+                                "خاموش شدن هوشمند VPN پس از اتمام زمان مشخص‌شده"
+                            else
+                                "Automatically stop VPN after the selected duration",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                val timerOptions = listOf(0, 15, 30, 60, 120)
+                IosSegmentedControl(
+                    items = timerOptions,
+                    selectedItem = autoDisconnectMinutes,
+                    onItemSelected = { mins ->
+                        coroutineScope.launch { repository.setAutoDisconnectMinutes(mins) }
+                    },
+                    itemLabel = { mins ->
+                        when (mins) {
+                            0 -> if (isPersian) "غیرفعال" else "Off"
+                            15 -> if (isPersian) "۱۵ دقیقه" else "15m"
+                            30 -> if (isPersian) "۳۰ دقیقه" else "30m"
+                            60 -> if (isPersian) "۱ ساعت" else "1h"
+                            120 -> if (isPersian) "۲ ساعت" else "2h"
+                            else -> "${mins}m"
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            IosHairlineDivider(startIndent = 16.dp)
+
+            // Split Tunneling Navigation Row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigateToSplitTunnel() }
+                    .padding(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    IosIconBadge(icon = Icons.AutoMirrored.Filled.AltRoute, color = AppleIndigo)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = if (isPersian) "تفکیک ترافیک برنامه‌ها (Split Tunneling)" else "Per-App Split Tunneling",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        val modeDesc = when (splitTunnelMode) {
+                            com.afrouzi.dnsmaster.model.SplitTunnelMode.ALL_APPS ->
+                                if (isPersian) "همه برنامه‌ها (پیش‌فرض)" else "All apps protected"
+                            com.afrouzi.dnsmaster.model.SplitTunnelMode.BYPASS_SELECTED ->
+                                if (isPersian) "${splitTunnelPackages.size} برنامه استثنا شده" else "${splitTunnelPackages.size} apps bypassed"
+                            com.afrouzi.dnsmaster.model.SplitTunnelMode.ONLY_SELECTED ->
+                                if (isPersian) "${splitTunnelPackages.size} برنامه انتخابی" else "${splitTunnelPackages.size} apps routed"
+                        }
+                        Text(
+                            text = modeDesc,
+                            fontSize = 12.sp,
+                            color = AppleBlue
+                        )
+                    }
+                }
+
+                Icon(
+                    imageVector = if (isPersian) Icons.Default.ChevronLeft else Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            IosHairlineDivider(startIndent = 16.dp)
+
+            // Battery Optimization Exemption Row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            try {
+                                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                    data = Uri.parse("package:${context.packageName}")
+                                }
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                try {
+                                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                    context.startActivity(intent)
+                                } catch (ignored: Exception) {}
+                            }
+                        }
+                    }
+                    .padding(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    IosIconBadge(
+                        icon = Icons.Default.BatterySaver,
+                        color = if (isIgnoringBattery) AppleGreen else AppleOrange
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = if (isPersian) "استثنا از محدودیت باتری (پس‌زمینه)" else "Battery Optimization Exemption",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (isIgnoringBattery) {
+                                if (isPersian) "نامحدود (سرویس در پس‌زمینه پایدار است)" else "Unrestricted (Safe from killing)"
+                            } else {
+                                if (isPersian) "دارای محدودیت (برای بهینه‌سازی ضربه بزنید)" else "Restricted (Tap to exempt)"
+                            },
+                            fontSize = 12.sp,
+                            color = if (isIgnoringBattery) AppleGreen else AppleOrange
+                        )
+                    }
+                }
+
+                Icon(
+                    imageVector = if (isPersian) Icons.Default.ChevronLeft else Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }

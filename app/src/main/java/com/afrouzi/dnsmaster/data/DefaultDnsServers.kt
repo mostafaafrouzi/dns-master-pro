@@ -5,7 +5,7 @@ import com.afrouzi.dnsmaster.model.DnsItem
 
 object DefaultDnsServers {
     val list: List<DnsItem> = listOf(
-        // Fast & General
+        // Fast & General (سرورهای عمومی و پرسرعت جهانی)
         DnsItem(
             id = "cloudflare",
             name = "Cloudflare (1.1.1.1)",
@@ -15,6 +15,7 @@ object DefaultDnsServers {
             descriptionEn = "Ultra-fast global DNS by Cloudflare with strict privacy.",
             descriptionFa = "سریع‌ترین دی‌ان‌اس عمومی جهان متعلق به کلودفلر با حفظ حریم خصوصی.",
             isFavorite = true,
+            dohUrl = "https://cloudflare-dns.com/dns-query",
             primaryIpv6 = "2606:4700:4700::1111",
             secondaryIpv6 = "2606:4700:4700::1001"
         ),
@@ -27,6 +28,7 @@ object DefaultDnsServers {
             descriptionEn = "Reliable, resilient, and widely distributed global DNS by Google.",
             descriptionFa = "دی‌ان‌اس پایدار و قدرتمند گوگل با پوشش سرورهای جهانی.",
             isFavorite = true,
+            dohUrl = "https://dns.google/dns-query",
             primaryIpv6 = "2001:4860:4860::8888",
             secondaryIpv6 = "2001:4860:4860::8844"
         ),
@@ -39,6 +41,7 @@ object DefaultDnsServers {
             descriptionEn = "Blocks malicious domains, botnets, and phishing automatically.",
             descriptionFa = "مسدودکننده بدافزارها، فیشینگ و سایت‌های مخرب توسط بنیاد Quad9.",
             isFavorite = false,
+            dohUrl = "https://dns.quad9.net/dns-query",
             primaryIpv6 = "2620:fe::fe",
             secondaryIpv6 = "2620:fe::9"
         ),
@@ -51,6 +54,7 @@ object DefaultDnsServers {
             descriptionEn = "High performance with built-in security features from Cisco.",
             descriptionFa = "دی‌ان‌اس بسیار باکیفیت و ایمن متعلق به شرکت معتبر سیسکو.",
             isFavorite = false,
+            dohUrl = "https://doh.opendns.com/dns-query",
             primaryIpv6 = "2620:119:35::35",
             secondaryIpv6 = "2620:119:53::53"
         ),
@@ -62,16 +66,47 @@ object DefaultDnsServers {
             category = DnsCategory.FAST.name,
             descriptionEn = "Fast uncensored DNS without telemetry or logging.",
             descriptionFa = "سرویس مدرن و پرسرعت بدون ذخیره گزارش و لاگ کاربر.",
+            dohUrl = "https://freedns.controld.com/p0",
             isFavorite = false
         ),
         DnsItem(
-            id = "level3",
-            name = "Level3 (Lumen)",
-            primaryIp = "209.244.0.3",
-            secondaryIp = "209.244.0.4",
+            id = "yandex_dns",
+            name = "Yandex DNS",
+            primaryIp = "77.88.8.8",
+            secondaryIp = "77.88.8.1",
             category = DnsCategory.FAST.name,
-            descriptionEn = "Enterprise backbone tier-1 provider DNS.",
-            descriptionFa = "دی‌ان‌اس مستقیم از ستون فقرات شبکه جهانی اینترنت (Tier-1).",
+            descriptionEn = "Fast, reliable public DNS servers provided by Yandex.",
+            descriptionFa = "سرورهای عمومی و پرسرعت یاندکس با پایداری بالا.",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "comodo_secure",
+            name = "Comodo Secure DNS",
+            primaryIp = "8.26.56.26",
+            secondaryIp = "8.20.247.20",
+            category = DnsCategory.FAST.name,
+            descriptionEn = "Enterprise cloud-based DNS with domain filtering and malicious URL protection.",
+            descriptionFa = "سرور امن و ابری کومودو با فیلترینگ دامنه‌های فیشینگ و مخرب.",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "verisign",
+            name = "VeriSign Public DNS",
+            primaryIp = "64.6.64.6",
+            secondaryIp = "64.6.65.6",
+            category = DnsCategory.FAST.name,
+            descriptionEn = "Privacy-respecting DNS by VeriSign, the root registry operator for .com.",
+            descriptionFa = "دی‌ان‌اس امن شرکت وری‌ساین (اپراتور اصلی ثبت دامنه‌های دات‌کام).",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "dnswatch",
+            name = "DNS.WATCH",
+            primaryIp = "84.200.69.80",
+            secondaryIp = "84.200.70.40",
+            category = DnsCategory.FAST.name,
+            descriptionEn = "Uncensored, neutral, and privacy-friendly DNS hosted in Germany.",
+            descriptionFa = "دی‌ان‌اس بدون سانسور، بی‌طرف و حامی حریم شخصی در آلمان.",
             isFavorite = false
         ),
         DnsItem(
@@ -85,17 +120,37 @@ object DefaultDnsServers {
             isFavorite = false
         ),
         DnsItem(
-            id = "dnswatch",
-            name = "DNS.WATCH",
-            primaryIp = "84.200.69.80",
-            secondaryIp = "84.200.70.40",
+            id = "opennic",
+            name = "OpenNIC Project",
+            primaryIp = "23.94.60.240",
+            secondaryIp = "128.52.130.209",
             category = DnsCategory.FAST.name,
-            descriptionEn = "Uncensored, neutral, and privacy-friendly DNS hosted in Germany.",
-            descriptionFa = "دی‌ان‌اس بدون سانسور، بی‌طرف و حامی حریم شخصی در آلمان.",
+            descriptionEn = "Democratic, community-governed alternative DNS with censorship resistance.",
+            descriptionFa = "پروژه متن‌باز و غیرمتمرکز OpenNIC مقاوم در برابر سانسور و مسدودی.",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "safedns",
+            name = "SafeDNS",
+            primaryIp = "195.46.39.39",
+            secondaryIp = "195.46.39.40",
+            category = DnsCategory.FAST.name,
+            descriptionEn = "AI-powered web filtering and secure threat prevention DNS.",
+            descriptionFa = "دی‌ان‌اس هوشمند با پایش تهدیدات امنیتی و تروجان‌ها.",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "level3",
+            name = "Level3 (Lumen)",
+            primaryIp = "209.244.0.3",
+            secondaryIp = "209.244.0.4",
+            category = DnsCategory.FAST.name,
+            descriptionEn = "Enterprise backbone tier-1 provider DNS.",
+            descriptionFa = "دی‌ان‌اس مستقیم از ستون فقرات شبکه جهانی اینترنت (Tier-1).",
             isFavorite = false
         ),
 
-        // Anti-Sanction & Developer (تحریم‌شکن‌های اختصاصی)
+        // Anti-Sanction & Developer (تحریم‌شکن‌های اختصاصی ایرانی)
         DnsItem(
             id = "shecan",
             name = "شکن (Shecan)",
@@ -103,7 +158,7 @@ object DefaultDnsServers {
             secondaryIp = "185.51.200.2",
             category = DnsCategory.ANTI_SANCTION.name,
             descriptionEn = "Bypasses international technological sanctions on developer services.",
-            descriptionFa = "سامانه تحریم‌شکن ایرانی برای دسترسی به سایت‌های تحریم‌شده برای ایرانیان.",
+            descriptionFa = "محبوب‌ترین سامانه تحریم‌شکن ایرانی برای دسترسی به سایت‌های تحریم‌شده.",
             isFavorite = true
         ),
         DnsItem(
@@ -146,8 +201,28 @@ object DefaultDnsServers {
             descriptionFa = "بهینه‌سازی مسیرها و رفع تحریم‌های اعمال‌شده بر اینترنت ایران.",
             isFavorite = false
         ),
+        DnsItem(
+            id = "sama",
+            name = "سما (Sama DNS)",
+            primaryIp = "89.144.176.100",
+            secondaryIp = "89.144.176.101",
+            category = DnsCategory.ANTI_SANCTION.name,
+            descriptionEn = "Iranian anti-sanction DNS providing reliable access to restricted developer tools.",
+            descriptionFa = "سرویس تحریم‌شکن سما برای دسترسی پایدار به کتابخانه‌ها و مخازن کد.",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "shelter",
+            name = "شلتر (Shelter DNS)",
+            primaryIp = "185.88.152.12",
+            secondaryIp = "185.88.152.13",
+            category = DnsCategory.ANTI_SANCTION.name,
+            descriptionEn = "Specialized anti-sanction resolver bypassing IP and geo restrictions.",
+            descriptionFa = "دی‌ان‌اس تحریم‌شکن شلتر برای باز کردن خدمات تحریم‌شده خارجی.",
+            isFavorite = false
+        ),
 
-        // Gaming (پینگ پایین مخصوص بازی)
+        // Gaming (پینگ پایین مخصوص بازی و گیمینگ آنلاین)
         DnsItem(
             id = "radar_game",
             name = "Radar Game (رادار گیم)",
@@ -176,6 +251,7 @@ object DefaultDnsServers {
             category = DnsCategory.GAMING.name,
             descriptionEn = "Low jitter and fast query response ideal for real-time competitive gaming.",
             descriptionFa = "پاسخ‌دهی آنی و حداقل نوسان پینگ مناسب بازی‌های رقابتی.",
+            dohUrl = "https://cloudflare-dns.com/dns-query",
             isFavorite = false
         ),
         DnsItem(
@@ -186,10 +262,21 @@ object DefaultDnsServers {
             category = DnsCategory.GAMING.name,
             descriptionEn = "Global edge caching for consistent game matchmaking and updates.",
             descriptionFa = "اتصال پایدار و کش قدرتمند برای پچ‌ها و بازی‌های آنلاین سراسری.",
+            dohUrl = "https://dns.google/dns-query",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "level3_gaming",
+            name = "Level3 Gaming (Lumen)",
+            primaryIp = "209.244.0.3",
+            secondaryIp = "209.244.0.4",
+            category = DnsCategory.GAMING.name,
+            descriptionEn = "Tier-1 direct routing with ultra-low hop counts to international game servers.",
+            descriptionFa = "مسیریابی رده اول Tier-1 با کمترین هاپ به سرورهای خارجی بازی‌ها.",
             isFavorite = false
         ),
 
-        // Privacy & Ad-Blocking
+        // Privacy & Ad-Blocking (ضد تبلیغات و ردیابی)
         DnsItem(
             id = "adguard_default",
             name = "AdGuard DNS (AdBlock)",
@@ -199,6 +286,7 @@ object DefaultDnsServers {
             descriptionEn = "Blocks banners, popups, video ads, trackers, and telemetry.",
             descriptionFa = "مسدودسازی تبلیغات مزاحم وبسایت‌ها، بنرها و سیستم‌های ردیابی آنلاین.",
             isFavorite = true,
+            dohUrl = "https://dns.adguard-dns.com/dns-query",
             primaryIpv6 = "2a10:50c0::ad1:ff",
             secondaryIpv6 = "2a10:50c0::ad2:ff"
         ),
@@ -223,6 +311,16 @@ object DefaultDnsServers {
             isFavorite = false
         ),
         DnsItem(
+            id = "norton_connectsafe",
+            name = "Norton ConnectSafe",
+            primaryIp = "199.85.126.10",
+            secondaryIp = "199.85.127.10",
+            category = DnsCategory.PRIVACY.name,
+            descriptionEn = "Symantec Norton threat intelligence blocking malware, phishing, and scam sites.",
+            descriptionFa = "سپر امنیتی نورتون برای مسدودسازی آنی سایت‌های فیشینگ و آلوده به ویروس.",
+            isFavorite = false
+        ),
+        DnsItem(
             id = "alternate_dns",
             name = "Alternate DNS",
             primaryIp = "76.76.19.19",
@@ -233,7 +331,7 @@ object DefaultDnsServers {
             isFavorite = false
         ),
 
-        // Family & Safe Search
+        // Family & Safe Search (حفاظت خانواده و فیلتر محتوا)
         DnsItem(
             id = "cleanbrowsing_family",
             name = "CleanBrowsing Family",
@@ -262,6 +360,27 @@ object DefaultDnsServers {
             category = DnsCategory.FAMILY.name,
             descriptionEn = "Pre-configured adult domain blocking from Cisco OpenDNS.",
             descriptionFa = "حفاظت خودکار از خانواده و مسدودسازی پیش‌فرض سایت‌های مخرب توسط سیسکو.",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "yandex_family",
+            name = "Yandex Family DNS",
+            primaryIp = "77.88.8.7",
+            secondaryIp = "77.88.8.3",
+            category = DnsCategory.FAMILY.name,
+            descriptionEn = "Filters adult websites and enforces safe search for families.",
+            descriptionFa = "فیلتر محتوای غیراخلاقی و اعمال جستجوی پاک برای اعضای خانواده.",
+            isFavorite = false
+        ),
+        DnsItem(
+            id = "cloudflare_family",
+            name = "Cloudflare 1.1.1.3 (Family)",
+            primaryIp = "1.1.1.3",
+            secondaryIp = "1.0.0.3",
+            category = DnsCategory.FAMILY.name,
+            descriptionEn = "Automated malware and adult content blocking with high Cloudflare speed.",
+            descriptionFa = "مسدودسازی خودکار بدافزارها و محتوای بزرگسالان با سرعت بالای کلودفلر.",
+            dohUrl = "https://family.cloudflare-dns.com/dns-query",
             isFavorite = false
         )
     )

@@ -28,6 +28,12 @@ class DnsRepository(private val context: Context) {
         private val KEY_LANGUAGE = stringPreferencesKey("app_language") // "fa" or "en"
         private val KEY_THEME = stringPreferencesKey("app_theme") // "system", "dark", "light"
         private val KEY_AUTO_CONNECT_BOOT = booleanPreferencesKey("auto_connect_boot")
+        private val KEY_DOH_ENABLED = booleanPreferencesKey("doh_enabled")
+        private val KEY_LOCAL_CACHE_ENABLED = booleanPreferencesKey("local_cache_enabled")
+        private val KEY_AUTO_DISCONNECT_MINUTES = intPreferencesKey("auto_disconnect_minutes")
+        private val KEY_SPLIT_TUNNEL_MODE = stringPreferencesKey("split_tunnel_mode")
+        private val KEY_SPLIT_TUNNEL_PACKAGES = stringSetPreferencesKey("split_tunnel_packages")
+        private val KEY_PROMPTED_BATTERY = booleanPreferencesKey("prompted_battery_exemption")
 
         fun getDefaultSystemLanguage(): String {
             val lang = java.util.Locale.getDefault().language.lowercase()
@@ -49,6 +55,38 @@ class DnsRepository(private val context: Context) {
         val connectedStartTime = MutableStateFlow(0L)
         val activePingMs = MutableStateFlow<Long?>(null)
         val currentLanguage = MutableStateFlow(getDefaultSystemLanguage())
+        val autoDisconnectRemainingSeconds = MutableStateFlow<Long?>(null)
+        val cacheHitsCount = MutableStateFlow(0L)
+        val isDohActive = MutableStateFlow(false)
+    }
+
+    val dohEnabledFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_DOH_ENABLED] ?: false
+    }
+
+    val localCacheEnabledFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_LOCAL_CACHE_ENABLED] ?: true
+    }
+
+    val autoDisconnectMinutesFlow: Flow<Int> = context.dataStore.data.map { prefs ->
+        prefs[KEY_AUTO_DISCONNECT_MINUTES] ?: 0
+    }
+
+    val splitTunnelModeFlow: Flow<com.afrouzi.dnsmaster.model.SplitTunnelMode> = context.dataStore.data.map { prefs ->
+        val raw = prefs[KEY_SPLIT_TUNNEL_MODE] ?: "ALL_APPS"
+        try {
+            com.afrouzi.dnsmaster.model.SplitTunnelMode.valueOf(raw)
+        } catch (e: Exception) {
+            com.afrouzi.dnsmaster.model.SplitTunnelMode.ALL_APPS
+        }
+    }
+
+    val splitTunnelPackagesFlow: Flow<Set<String>> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SPLIT_TUNNEL_PACKAGES] ?: emptySet()
+    }
+
+    val promptedBatteryFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_PROMPTED_BATTERY] ?: false
     }
 
     val selectedDnsIdFlow: Flow<String> = context.dataStore.data.map { prefs ->
@@ -143,6 +181,42 @@ class DnsRepository(private val context: Context) {
     suspend fun setAutoConnectBoot(enabled: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[KEY_AUTO_CONNECT_BOOT] = enabled
+        }
+    }
+
+    suspend fun setDohEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_DOH_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setLocalCacheEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_LOCAL_CACHE_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setAutoDisconnectMinutes(minutes: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AUTO_DISCONNECT_MINUTES] = minutes
+        }
+    }
+
+    suspend fun setSplitTunnelMode(mode: com.afrouzi.dnsmaster.model.SplitTunnelMode) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SPLIT_TUNNEL_MODE] = mode.name
+        }
+    }
+
+    suspend fun setSplitTunnelPackages(packages: Set<String>) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SPLIT_TUNNEL_PACKAGES] = packages
+        }
+    }
+
+    suspend fun setPromptedBatteryExemption(prompted: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_PROMPTED_BATTERY] = prompted
         }
     }
 

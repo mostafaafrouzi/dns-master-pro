@@ -2,11 +2,11 @@
 
 [فارسی](README.md) · **English**
 
-A high-performance, minimalist Android DNS changer and live multi-server benchmark app, crafted with **Apple iOS Human Interface Guidelines (HIG)** aesthetic, native **IRANSansX Eco** Persian typography, **RFC 1035 UDP NSLookup** resolver engine, adaptive system navigation support, pre-configured anti-sanction resolvers, dual-stack IPv4/IPv6 support, and zero ads.
+A high-performance, minimalist Android DNS changer and live multi-server benchmark app, crafted with **Apple iOS Human Interface Guidelines (HIG)** aesthetic, native **IRANSansX Eco** Persian typography, **RFC 1035 UDP NSLookup** resolver engine, v2rayNG-style sticky notification with live chronometer and instant disconnect, smart Quick Settings Tile, comprehensive anti-sanction and global DNS provider list, adaptive system navigation support, dual-stack IPv4/IPv6 support, and zero ads.
 
 <div dir="ltr">
 
-[![Latest Release](https://img.shields.io/github/v/release/mostafaafrouzi/android-dns-changer?style=flat-square&color=007AFF)](https://github.com/mostafaafrouzi/android-dns-changer/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/mostafaafrouzi/dns-master-pro?style=flat-square&color=007AFF)](https://github.com/mostafaafrouzi/dns-master-pro/releases/latest)
 [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B%20(API%2024%2B)-3DDC84?style=flat-square&logo=android)](https://android.com)
 [![Design](https://img.shields.io/badge/Design-Apple%20iOS%20HIG-007AFF?style=flat-square&logo=apple)](https://developer.apple.com/design/human-interface-guidelines/)
 [![Font](https://img.shields.io/badge/Font-IRANSansX-007AFF?style=flat-square)](https://fontiran.com)
@@ -21,45 +21,47 @@ A high-performance, minimalist Android DNS changer and live multi-server benchma
 
 Most DNS changing applications on Google Play are cluttered with **intrusive full-screen video ads**, heavy battery consumption, and outdated user interfaces.
 
-**DNS Master Pro** has been completely reimagined around Apple iOS Human Interface Guidelines (HIG) — featuring Inset Grouped cards, segmented controls, spring physics action buttons, and official Apple System color tokens. Its high-efficiency local TUN forwarder operates strictly on port 53 (DNS) with zero packet loss. **Your downloads, browsing traffic, and personal data never touch third-party proxy servers, guaranteeing full internet bandwidth and zero latency impact.**
+**DNS Master Pro** has been completely reimagined around Apple iOS Human Interface Guidelines (HIG) — featuring Inset Grouped cards, segmented controls, spring physics action buttons, and official Apple System color tokens. Its high-efficiency local TUN forwarder operates strictly on port 53 (DNS) with zero packet loss. **Your downloads, browsing traffic, and personal data never touch third-party proxy servers, guaranteeing full internet bandwidth and near-zero battery usage.**
 
 ---
 
 ## Key Features
 
-### 1. Authentic Persian Typography (IRANSansX Eco)
+### 1. v2rayNG-Style Live Notification with Chronometer
+- Real-time connection status display featuring a **live connection chronometer**.
+- Clean presentation of active server name and configured DNS IP addresses.
+- Instant, persistent **"Disconnect"** action button operating reliably across all Android versions without launching the app.
+
+### 2. Smart Quick Settings Tile
+- Dedicated Quick Settings Tile in Android's notification shade for one-tap DNS toggle.
+- Real-time tile state synchronization (Active / Inactive).
+- Direct app entry on Long Press gesture.
+
+### 3. Authentic Persian Typography (IRANSansX Eco)
 - Dedicated integration of the **IRANSansX Eco** font family for all Persian content.
 - Pixel-perfect vertical baseline alignment and `includeFontPadding = false` for clean, professional Persian text rendering.
 
-### 2. Real RFC 1035 UDP NSLookup Engine
+### 4. Real RFC 1035 UDP NSLookup Engine
 - Beyond simple ICMP/UDP ping: sends authentic raw RFC 1035 DNS queries directly to port 53.
 - Extracts and displays resolved IPv4 addresses, response status (NOERROR / SERVFAIL / TIMEOUT), TTL (Time-To-Live), and millisecond latency.
 - **Anti-Sanction Verification:** Automatically verifies whether DNS resolvers successfully unblock restricted developer services like `docker.com` and `developer.android.com`, displaying a green verified badge.
-- Interactive live inspector on the Home Screen plus a full multi-server benchmark mode on the Speed Test Screen.
+- Interactive live inspector on the Home Screen with horizontally scrollable suggestion chips, plus a full multi-server benchmark mode on the Speed Test Screen.
 
-### 3. Adaptive System Navigation Bar
-- Seamless, standard edge-to-edge support for both **3-Button Navigation** (Back, Home, Overview) and **Gesture Navigation**.
-- Zero UI clipping, proper `WindowInsets` padding, and edge-to-edge visual polish across all Android device form factors.
+### 5. Comprehensive Anti-Sanction & Global Resolvers
+- **Anti-Sanction Resolvers:** Shecan, 403 Online, Electro, Begzar, Radar Game, and more for accessing restricted developer tools, cloud platforms, and gaming networks.
+- **Top Global Providers:** Cloudflare (1.1.1.1), Google Public DNS (8.8.8.8), Quad9 Security, Cisco OpenDNS, AdGuard, Mullvad, Control D, and CleanBrowsing.
 
-### 4. Apple iOS HIG Minimalist Design System
+### 6. Battery Optimization Exemption
+- Standard, non-intrusive Android battery optimization exemption prompt ensuring uninterrupted background operation without OS kills.
+
+### 7. Apple iOS HIG Minimalist Design System
 - **Inset Grouped Layout:** Clean, structured cards with iOS-standard paddings and hairline dividers.
 - **Segmented Controls:** Smooth switching between modes and settings with fluid iOS animations.
-- **Direction-Aware Chevrons:** Outward-pointing chevrons in both English (LTR) and Persian (RTL).
 - **Apple System Colors:** `#007AFF` (Apple Blue), `#34C759` (Apple Green), `#FF9500` (Apple Orange), OLED pure black (`#000000`), and Apple's signature `#F2F2F7` grouped background.
+- Seamless compatibility with both 3-Button and Gesture navigation.
 
-### 5. High-Performance, Zero-Packet-Loss DNS Engine
-- Clean TUN interface loopback isolation (`192.0.2.1/32` and `192.0.2.53/32`) ensuring standard web traffic remains 100% untouched.
-- Direct stream buffer pipeline avoiding GC drops and heap buffer underflows.
-
-### 6. Pre-configured Global & Anti-Sanction Resolvers
-- **Anti-Sanction Resolvers:** Shecan, 403 Online, Electro, Begzar, and Radar Game for accessing restricted developer tools, cloud platforms, and gaming networks.
-- **Top Global Providers:** Cloudflare (1.1.1.1), Google Public DNS (8.8.8.8), Quad9 Security, Cisco OpenDNS, AdGuard, Mullvad, and CleanBrowsing.
-
-### 7. Reliable Notification Actions
-- Live foreground notification with an instant **"Disconnect"** action button operating with 100% reliability across all Android versions via direct `PendingIntent.getService`.
-
-### 8. Comprehensive Developer & About Section
-- Complete developer bio, official website links with language-specific UTM campaign tags, GitHub, LinkedIn, and direct links to other applications on CafeBazaar and Myket.
+### 8. System Default Language Detection
+- Automatic detection of device language (Persian / English) on first launch, with manual language toggle available in Settings.
 
 ---
 
@@ -96,7 +98,8 @@ Most DNS changing applications on Google Play are cluttered with **intrusive ful
 | Application ID | `com.afrouzi.dnsmaster` |
 | minSdk / targetSdk / compileSdk | 24 / 36 / 36 |
 | Kotlin / Compose Compiler | 2.0.21 |
-| Version | 1.2.1 |
+| Version | 1.0.0 |
+| Version Code | 1 |
 
 </div>
 
@@ -104,8 +107,8 @@ Most DNS changing applications on Google Play are cluttered with **intrusive ful
 
 ```bash
 # Clone repository
-git clone https://github.com/mostafaafrouzi/android-dns-changer.git
-cd android-dns-changer
+git clone https://github.com/mostafaafrouzi/dns-master-pro.git
+cd dns-master-pro
 
 # Build debug APK
 ./gradlew assembleDebug
@@ -121,7 +124,7 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 
 ## Download Latest Version
 
-- **GitHub Releases:** [Download APK from GitHub Releases](https://github.com/mostafaafrouzi/android-dns-changer/releases/latest)
+- **GitHub Releases:** [Download APK from GitHub Releases](https://github.com/mostafaafrouzi/dns-master-pro/releases/latest)
 
 ---
 

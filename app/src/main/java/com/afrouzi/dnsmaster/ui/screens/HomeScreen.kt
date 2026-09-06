@@ -2,7 +2,11 @@ package com.afrouzi.dnsmaster.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.net.VpnService
+import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -29,6 +33,19 @@ import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.material3.*
 import com.afrouzi.dnsmaster.core.network.DnsLookupEngine
 import com.afrouzi.dnsmaster.core.network.DnsLookupResult
@@ -36,6 +53,7 @@ import com.afrouzi.dnsmaster.util.NetworkDiagnosticsHelper
 import com.afrouzi.dnsmaster.util.NetworkInfoState
 import com.afrouzi.dnsmaster.util.NetworkTransport
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -109,6 +127,23 @@ fun HomeScreen(
     var lastSessionServerName by remember { mutableStateOf("") }
     var showDisconnectionDialog by remember { mutableStateOf(false) }
 
+    // Advanced Features states
+    val isDohActive by DnsRepository.isDohActive.collectAsState()
+    val cacheHitsCount by DnsRepository.cacheHitsCount.collectAsState()
+    val autoDisconnectSeconds by DnsRepository.autoDisconnectRemainingSeconds.collectAsState()
+    val hasPromptedBattery by repository.promptedBatteryFlow.collectAsState(initial = false)
+    var dismissedBatteryThisSession by rememberSaveable { mutableStateOf(false) }
+    var showBatteryDialog by remember { mutableStateOf(false) }
+
+    val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as? PowerManager }
+    fun isAppExemptFromBattery(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+        } else {
+            true
+        }
+    }
+
     // Live NSLookup Inspector state
     var lookupDomain by remember { mutableStateOf("google.com") }
     var isLookingUp by remember { mutableStateOf(false) }
@@ -118,6 +153,9 @@ fun HomeScreen(
         networkInfo = NetworkDiagnosticsHelper.getNetworkInfo(context)
         if (connectionState == VpnConnectionState.CONNECTED) {
             wasConnected = true
+            if (!isAppExemptFromBattery() && !dismissedBatteryThisSession) {
+                showBatteryDialog = true
+            }
         } else if (wasConnected && connectionState == VpnConnectionState.DISCONNECTED) {
             wasConnected = false
             if (lastActiveDuration != "00:00:00") {
@@ -305,6 +343,88 @@ fun HomeScreen(
                             fontWeight = FontWeight.SemiBold,
                             color = if (livePing != null) AppleGreen else MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                }
+
+                // Advanced Status Badges (DoH, Cache Hits, Timer)
+                if (connectionState == VpnConnectionState.CONNECTED && (isDohActive || cacheHitsCount > 0 || autoDisconnectSeconds != null)) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (isDohActive) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = AppleBlue.copy(alpha = 0.12f)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = AppleBlue,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = if (isPersian) "رمزگذاری DoH" else "DoH Encrypted",
+                                        color = AppleBlue,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+
+                        if (cacheHitsCount > 0) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = AppleGreen.copy(alpha = 0.12f)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Bolt,
+                                        contentDescription = null,
+                                        tint = AppleGreen,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = if (isPersian) "کش: $cacheHitsCount (زیر ۱ms)" else "Cache: $cacheHitsCount (<1ms)",
+                                        color = AppleGreen,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+
+                        if (autoDisconnectSeconds != null) {
+                            val mins = autoDisconnectSeconds!! / 60
+                            val secs = autoDisconnectSeconds!! % 60
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = AppleOrange.copy(alpha = 0.12f)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = String.format("%02d:%02d", mins, secs),
+                                        color = AppleOrange,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -621,19 +741,93 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedTextField(
-                        value = lookupDomain,
-                        onValueChange = { lookupDomain = it },
-                        singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AppleBlue,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    )
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        BasicTextField(
+                            value = lookupDomain,
+                            onValueChange = { lookupDomain = it },
+                            singleLine = true,
+                            textStyle = TextStyle(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal,
+                                textDirection = TextDirection.Ltr,
+                                platformStyle = PlatformTextStyle(includeFontPadding = false)
+                            ),
+                            cursorBrush = SolidColor(AppleBlue),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Uri,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (!isLookingUp && lookupDomain.isNotBlank()) {
+                                        isLookingUp = true
+                                        coroutineScope.launch {
+                                            lookupResult = DnsLookupEngine.resolve(
+                                                domain = lookupDomain,
+                                                serverIp = currentDns.primaryIp
+                                            )
+                                            isLookingUp = false
+                                        }
+                                    }
+                                }
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            decorationBox = { innerTextField ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        .padding(horizontal = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Language,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Box(
+                                        modifier = Modifier.weight(1f),
+                                        contentAlignment = Alignment.CenterStart
+                                    ) {
+                                        if (lookupDomain.isEmpty()) {
+                                            Text(
+                                                text = "example.com",
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                    if (lookupDomain.isNotBlank()) {
+                                        IconButton(
+                                            onClick = { lookupDomain = "" },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Clear,
+                                                contentDescription = "Clear",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                    }
 
                     Spacer(modifier = Modifier.width(8.dp))
 
@@ -650,10 +844,10 @@ fun HomeScreen(
                                 }
                             }
                         },
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppleBlue, contentColor = Color.White),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
-                        modifier = Modifier.height(50.dp)
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                        modifier = Modifier.height(48.dp)
                     ) {
                         Text(
                             text = if (isPersian) "تست" else "Resolve",
@@ -885,7 +1079,39 @@ fun HomeScreen(
                 }
             },
             shape = RoundedCornerShape(22.dp),
-            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
+    // Battery Optimization Exemption Dialog (Initial Connection)
+    if (showBatteryDialog) {
+        BatteryExemptionDialog(
+            isPersian = isPersian,
+            onConfirm = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    try {
+                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                        }
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        try {
+                            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                            context.startActivity(intent)
+                        } catch (ignored: Exception) {}
+                    }
+                }
+                coroutineScope.launch {
+                    repository.setPromptedBatteryExemption(true)
+                }
+                showBatteryDialog = false
+            },
+            onDismiss = {
+                dismissedBatteryThisSession = true
+                coroutineScope.launch {
+                    repository.setPromptedBatteryExemption(true)
+                }
+                showBatteryDialog = false
+            }
         )
     }
 }
